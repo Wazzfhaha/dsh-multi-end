@@ -18,6 +18,9 @@
     "node": ">=24"
   },
   "dsh": {
+    "bundle": {
+    "patch": "./cordis.patch.yml"
+  },
     "client": {
       "inject": [
         "@deepseek-ai/dsh-client-runtime",
@@ -38,6 +41,7 @@
   },
   "license": "MIT",
   "files": [
+    "cordis.patch.yml",
     "src/**/*.js",
     "src/**/*.css",
     "src/**/*.py",

@@ -32,7 +32,7 @@ npm test
 
 `src/browser/` 是浏览器源文件，`src/client.js` 是生成入口。测试使用 Node 内置框架和本地模拟服务，不会连接真实 SSH 主机或发送模型请求。真实后端验收须使用独立 profile 和专用测试会话。
 
-运行 `node scripts/export-source.mjs` 可生成供手动上传的干净源码目录。不会上传或创建 Git 仓库；`.runtime/`、日志、备份和本机验收脚本均不导出。当前包保留 `private: true`，避免误发布到 npm。
+直接在这个固定 Git 仓库中开发、运行和提交；升级版本不更换目录，也不再导出源码副本。`node_modules/` 和 `.runtime/` 不纳入 Git。当前包保留 `private: true`，避免误发布到 npm。Linux 登录探测的补充测试可运行 `python3 -B tests/remote-probe.test.py`。
 
 插件依赖 DSH 的运行时 gateway 适配，不修改其安装文件；它不是上游承诺稳定的多后端扩展接口。更新 DSH 后需要重新验收。
 
