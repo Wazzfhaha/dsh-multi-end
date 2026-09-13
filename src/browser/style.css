@@ -1,0 +1,83 @@
+.dshm { --dm-line: color-mix(in srgb,currentColor 17%,transparent); --dm-muted: color-mix(in srgb,currentColor 66%,transparent); --dm-accent: #316fb5; --dm-soft: color-mix(in srgb,currentColor 4%,transparent); font: inherit; font-size: 13px; line-height: 1.55; color: inherit; min-width: 0; }
+.dshm *, .dshm *::before, .dshm *::after { box-sizing: border-box; }
+.dshm-manager { width: 100%; max-width: 1040px; margin: 0 auto; padding: 4px 0 20px; }
+.dshm h2,.dshm h3,.dshm p { margin: 0; }
+.dshm h2 { font-size: 20px; font-weight: 650; letter-spacing: -.4px; }
+.dshm h3 { font-size: 14px; font-weight: 650; }
+.dshm small { display: block; font-size: 11px; line-height: 1.6; color: var(--dm-muted); font-weight: 400; }
+.dshm button,.dshm input,.dshm textarea,.dshm select { font: inherit; color: inherit; }
+.dshm button { min-height: 32px; padding: 5px 11px; background: transparent; border: 1px solid var(--dm-line); border-radius: 6px; cursor: pointer; white-space: nowrap; transition: background .15s,border-color .15s; }
+.dshm button:hover:not(:disabled) { background: var(--dm-soft); border-color: color-mix(in srgb,var(--dm-accent) 60%,transparent); }
+.dshm button:active:not(:disabled) { transform: translateY(1px); }
+.dshm button:disabled { opacity: .48; cursor: not-allowed; }
+.dshm :is(button,input,textarea,summary):focus-visible { outline: 2px solid var(--dm-accent); outline-offset: 3px; }
+.dshm button.dshm-primary { background: var(--dm-accent); color: #fff; border-color: var(--dm-accent); font-weight: 600; }
+.dshm button.dshm-primary:hover:not(:disabled) { background: #245d9c; }
+.dshm button.dshm-danger { color: #ba3947; }
+.dshm input:not([type=checkbox]):not([type=radio]),.dshm textarea { width: 100%; min-width: 0; border: 1px solid var(--dm-line); border-radius: 6px; background: color-mix(in srgb,Canvas 74%,transparent); padding: 7px 10px; min-height: 34px; }
+.dshm input::placeholder,.dshm textarea::placeholder { color: var(--dm-muted); opacity: .8; }
+.dshm input[readonly] { background: var(--dm-soft); }
+.dshm input:is([type=checkbox],[type=radio]) { accent-color: var(--dm-accent); }
+.dshm-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 25px; }
+.dshm-heading { display: flex; align-items: center; gap: 12px; }
+.dshm-heading p { color: var(--dm-muted); margin-top: 4px; font-size: 12px; }
+.dshm-brand { display: grid; place-items: center; flex: 0 0 43px; height: 43px; color: var(--dm-accent); background: color-mix(in srgb,var(--dm-accent) 9%,transparent); border: 1px solid color-mix(in srgb,var(--dm-accent) 18%,transparent); border-radius: 10px; }
+.dshm-version { border: 1px solid var(--dm-line); border-radius: 4px; padding: 2px 6px; font-size: 10px; white-space: nowrap; color: var(--dm-muted); }
+.dshm-toolbar { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
+.dshm-toolbar>input { flex: 1 1 160px; max-width: 300px; }
+.dshm-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dshm-summary { display: flex; gap: 18px; color: var(--dm-muted); font-size: 11px; margin: 12px 0; font-variant-numeric: tabular-nums; }
+.dshm-table-wrap { overflow-x: auto; border: 1px solid var(--dm-line); border-radius: 9px; }
+.dshm-table { border-collapse: collapse; width: 100%; text-align: left; font-size: 12px; }
+.dshm-table th { padding: 10px 12px; font-weight: 600; color: var(--dm-muted); background: var(--dm-soft); border-bottom: 1px solid var(--dm-line); white-space: nowrap; }
+.dshm-table td { padding: 13px 12px; vertical-align: middle; border-bottom: 1px solid var(--dm-line); }
+.dshm-table tbody>tr:last-child td { border-bottom: 0; }
+.dshm-table strong { display: block; font-size: 13px; font-weight: 600; }
+.dshm-destination { font-family: ui-monospace,SFMono-Regular,Consolas,monospace; font-size: 12px; overflow-wrap: anywhere; }
+.dshm-number { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dshm-status { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; color: var(--dm-muted); font-size: 11px; }
+.dshm-status i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.dshm-status.is-connected { color: #227652; }
+.dshm-row-actions { display: flex; gap: 3px; flex-wrap: wrap; min-width: 114px; }
+.dshm-row-actions button { border-color: transparent; min-height: 27px; padding: 3px 5px; font-size: 11px; }
+.dshm-row-actions .dshm-connect { color: var(--dm-accent); border-color: color-mix(in srgb,var(--dm-accent) 28%,transparent); padding-inline: 8px; }
+.dshm-table .dshm-notice td { font-size: 11px; color: var(--dm-muted); padding-top: 0; background: var(--dm-soft); }
+.dshm-muted { color: var(--dm-muted); font-size: 12px; }
+.dshm-empty { min-height: 245px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 35px 20px; border: 1px dashed var(--dm-line); border-radius: 9px; background: var(--dm-soft); }
+.dshm-empty>svg { color: var(--dm-muted); margin-bottom: 5px; }
+.dshm-editor { border: 1px solid color-mix(in srgb,var(--dm-accent) 27%,transparent); background: var(--dm-soft); border-radius: 9px; padding: 18px; display: grid; gap: 14px; margin: 14px 0; }
+.dshm-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px 16px; }
+.dshm-field { display: grid; gap: 5px; min-width: 0; font-size: 12px; font-weight: 500; }
+.dshm-directory { border: 1px solid var(--dm-line); border-radius: 8px; padding: 10px; margin-block: 10px; }
+.dshm-directory nav { display: flex; flex-wrap: wrap; gap: 5px; }
+.dshm-directory ul { list-style: none; padding: 0; max-height: 240px; overflow: auto; }
+.dshm-directory li button { display: block; width: 100%; text-align: left; margin-top: 4px; overflow-wrap: anywhere; }
+.dshm-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dshm-error { color: #ba3947; border-left: 2px solid currentColor; padding: 7px 10px; margin-block: 10px !important; font-size: 12px; }
+.dshm-import-list { max-height: 260px; overflow: auto; }
+.dshm-import-row { display: flex; gap: 10px; align-items: center; padding: 10px 4px; border-bottom: 1px solid var(--dm-line); cursor: pointer; }
+.dshm-import-row>span:nth-child(2) { flex: 1; }
+.dshm-choice { display: flex; gap: 14px; flex-wrap: wrap; }
+.dshm-choice label { display: flex; align-items: center; gap: 5px; font-size: 12px; }
+.dshm-help { margin-top: 18px; border-top: 1px solid var(--dm-line); padding-top: 14px; color: var(--dm-muted); font-size: 12px; }
+.dshm-help summary { cursor: pointer; font-weight: 500; }
+.dshm-help p { margin-top: 9px; max-width: 70ch; }
+.dshm-session-preview { margin-top: 18px; border: 1px solid var(--dm-line); border-radius: 9px; padding: 14px; }
+.dshm-session-preview p { margin-top: 5px; }
+.dshm-session-preview ul { list-style: none; padding: 0; margin: 10px 0 0; max-height: 220px; overflow: auto; }
+.dshm-session-preview li { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--dm-line); }
+.dshm-session-preview li>span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dshm-session-preview li>button { font-size: 11px; flex-shrink: 0; }
+.dshm-main { padding: 24px; height: 100%; overflow: auto; font-family: system-ui,-apple-system,"Segoe UI",sans-serif; }
+.dshm-main>.dshm-main-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+.dshm-conversation { display: flex; flex-direction: column; min-height: 0; height: calc(100% - 50px); max-width: 1100px; margin: 0 auto; gap: 10px; }
+.dshm-conversation>h3 { font-size: 17px; }
+.dshm-conversation>p { font-size: 12px; color: var(--dm-muted); }
+.dshm-history { flex: 1; min-height: 150px; overflow: auto; overflow-wrap: anywhere; border: 1px solid var(--dm-line); border-radius: 8px; padding: 16px; }
+.dshm-history article { padding: 12px 0; border-bottom: 1px solid var(--dm-line); }
+.dshm-history article:last-child { border-bottom: 0; }
+.dshm-history strong { font-size: 11px; color: var(--dm-muted); }
+.dshm-history pre { white-space: pre-wrap; font: inherit; line-height: 1.7; margin: 7px 0 0; }
+.dshm-conversation textarea { display: block; resize: vertical; min-height: 86px; max-height: 220px; }
+@media(max-width:640px) { .dshm-header { margin-bottom: 18px; } .dshm-version { display: none; } .dshm-fields { grid-template-columns: 1fr; } .dshm-table th,.dshm-table td { padding-inline: 8px; } .dshm-table { min-width: 540px; } .dshm-main { padding: 14px; } .dshm h2 { font-size: 18px; } }
+@media(prefers-reduced-motion:reduce) { .dshm * { transition: none !important; } }
