@@ -1,10 +1,18 @@
-# 安装与使用（开发预览）
+## 安装
 
-当前目标：DSH 0.1.5-rc.1，插件宿主使用 Node.js 24+、OpenSSH。SSH 在承载插件的 DSH 后端上运行，读取该用户的 SSH config 与密钥，未必是浏览器所在电脑的 config。远端不需要安装此插件。
+下载及安装使用 GitHub Release 提供的预构建包，无需自行构建源码。
 
-先在终端通过 SSH 连通目标，完成主机密钥信任；插件使用严格 known_hosts 检查和非交互认证。不要为了连接方便而关闭主机密钥检查。已有 SSH agent 可以承载已解锁的密钥；交互式密码及首次指纹确认没有插件内界面。
+在运行主 DSH 后端的终端中执行：
 
-本项目尚未发布到 npm 或插件市场，不要直接执行 `npm install dsh-ssh-workspaces` 并假设它就是本项目。开发源需要先 `npm ci`、`npm run build`、`npm test`。然后通过你的 DSH 版本所提供的本地插件安装方式，把当前包加入所用 profile，并启用其 Host/Client 插件入口。先在独立 profile 验证，避免覆盖整份个人 profile 配置。可公开的一键安装流程仍待在独立 GitHub 仓库与预发布包上验收。
+```bash
+dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.6/dsh-ssh-workspaces-0.0.6.tgz
+```
+
+如使用其他 profile，请将 `web` 替换为实际名称。安装后重启对应 DSH 后端。
+
+安装、主机配置界面和卸载已在独立的 WSL/Linux DSH 0.1.5-rc.1 环境中验证。Windows/macOS 后端及 DSH RC2 尚未完成实机验证。
+
+曾通过手动配置或本地链接安装本插件的用户，应先检查旧配置，避免重复注册。本项目尚未发布到 npm，请勿直接执行 `npm install dsh-ssh-workspaces`。
 
 ## 使用
 
