@@ -4,6 +4,22 @@
 
 **0.0.6 开发预览。适配基线：DSH 0.1.5-rc.1。尚未完成跨平台实机验收与完整交互支持。**
 
+## 安装与使用
+
+当前提供 [v0.0.6 安装包](https://github.com/Wazzfhaha/dsh-multi-end/releases/tag/v0.0.6)，验证基线为 DSH 0.1.5-rc.1。
+
+在运行主 DSH 后端的终端中执行：
+
+```bash
+dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.6/dsh-ssh-workspaces-0.0.6.tgz
+```
+
+如使用其他 profile，请替换 `web`。安装后重启对应后端，打开“设置 → DSH 多端管理”，手动添加 SSH 主机或从 SSH config 导入。
+
+远端需运行 DSH，但不需要安装本插件。曾手动安装或使用本地链接安装本插件的用户，请先检查旧配置，避免重复注册。
+
+详见 [安装说明](docs/install.md) 和 [兼容性与限制](docs/compatibility.md)。
+
 ## 已实现
 
 - 手动添加主机、选择导入 SSH config；SSH 和 DSH 端口独立配置。
