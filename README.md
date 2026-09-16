@@ -8,7 +8,9 @@ Remote SSH multi-host management for DSH. Access remote workspaces and sessions 
 
 ## 界面预览
 
-以下为真实插件组件，使用虚构的演示主机与会话。
+以下为真实 DSH 页面和插件组件，使用虚构的演示主机与会话。
+
+![同一原生侧栏汇总本地与远端工作区，打开远端演示会话](assets/screenshots/workspaces.png)
 
 ![主机管理与连接状态](assets/screenshots/connections.png)
 
