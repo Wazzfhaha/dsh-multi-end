@@ -24,6 +24,22 @@ export class NativeGateway {
     return id
   }
 
+  event(host, frame) {
+    if (frame.type !== 'emit' || !['api-session/added', 'api-session/removed', 'api-session/status', 'api-session/activity', 'api-session/error'].includes(frame.event)) return null
+    const args = frame.args
+    if (!Array.isArray(args)) throw Error('Invalid session notification')
+    if (frame.event === 'api-session/added') {
+      if (args.length !== 1 || typeof args[0]?.sessionId !== 'string') throw Error('Invalid session summary')
+      return { event: frame.event, args: [this.fields(host, args[0])] }
+    }
+    const kind = frame.event.split('/')[1]
+    if (typeof args[0] !== 'string' || args.length !== (kind === 'removed' ? 1 : 2) ||
+        (kind === 'status' && typeof args[1] !== 'boolean') ||
+        (kind === 'activity' && !Number.isFinite(args[1])) ||
+        (kind === 'error' && typeof args[1] !== 'string')) throw Error('Invalid session notification')
+    return { event: frame.event, args: [this.id(host, 'session', args[0]), ...args.slice(1)] }
+  }
+
   fields(host, value) {
     const result = { ...value }
     for (const [key, kind] of Object.entries(identities)) {

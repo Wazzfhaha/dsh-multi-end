@@ -114,7 +114,7 @@
       const run = promise => promise.catch(error => setError(error.message))
       const targets = state.targets.filter(target => [target.name, target.hostname, target.user, target.alias].some(value => value?.toLowerCase().includes(query.toLowerCase())))
       return h('section', { className: 'dshm dshm-manager', 'aria-label': 'DSH 多端管理' },
-        h('header', { className: 'dshm-header' }, h('div', { className: 'dshm-heading' }, h('span', { className: 'dshm-brand' }, h(HostIcon, { size: 23 })), h('div', null, h('h2', null, 'DSH 多端管理'), h('p', null, '管理 SSH 主机，在当前客户端使用远端 DSH'))),
+        h('header', { className: 'dshm-header' }, h('div', { className: 'dshm-heading' }, h('span', { className: 'dshm-brand' }, h(HostIcon, { size: 23 })), h('div', null, h('h2', null, 'DSH 多端管理 · Remote SSH'), h('p', null, '管理 SSH 主机，在当前客户端使用远端 DSH'))),
           h('span', { className: 'dshm-version' }, '开发预览')),
         h('div', { className: 'dshm-toolbar' }, h('input', { type: 'search', 'aria-label': '搜索主机', placeholder: '搜索名称、地址或用户…', value: query, onChange: event => setQuery(event.target.value) }),
           h('div', { className: 'dshm-actions' }, h('button', { onClick: () => setEditor({ kind: 'import' }) }, '从 SSH config 导入'), h('button', { className: 'dshm-primary', onClick: () => setEditor({ kind: 'edit' }) }, '＋ 添加主机'))),
@@ -157,7 +157,7 @@
           !connection.sessions.some(session => !session.archived) && h('p', null, '该后端没有未归档的会话'))),
         h('details', { className: 'dshm-help' }, h('summary', null, '连接与操作说明'),
           h('p', null, '“测试”检查 SSH；“连接”登录远端 DSH 并将会话加入侧栏。SSH 与 DSH 的端口可以分别设置。'),
-          h('p', null, '连接由插件保持，关闭设置不会断开。断开连接不会停止远端任务。刷新页面保留连接；重启主后端后需要手动重连。连接变化通过 DSH 原生重连更新侧栏，不刷新整页。断线会自动尝试恢复，也可点击“重连”；不会自动重发消息。'),
+          h('p', null, '连接由插件保持，关闭设置不会断开。断开连接不会停止远端任务。刷新页面保留连接；通过 SSH 自动读取登录信息并成功连接过的主机，会在主后端重启后自动恢复；手动断开会取消恢复。手动登录链接不保存，重启后需重新提供。连接变化通过 DSH 原生重连更新侧栏，不刷新整页。断线会自动尝试恢复，也可点击“重连”；不会自动重发消息。'),
           h('p', null, '远端不需要安装此插件。工具审批、用户提问、第三方交互卡片和归档恢复尚未接入，请在所属后端的界面处理。全局设置仍属于主后端。')))
     }
 

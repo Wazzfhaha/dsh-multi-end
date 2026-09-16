@@ -13,7 +13,7 @@ SSH 在承载插件的 DSH 后端上执行，读取该用户的 SSH config、密
 在运行主 DSH 后端的终端中执行：
 
 ```bash
-dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.6/dsh-ssh-workspaces-0.0.6.tgz
+dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.7/dsh-ssh-workspaces-0.0.7.tgz
 ```
 
 如使用其他 profile，请将 `web` 替换为实际名称。安装后重启对应 DSH 后端。
@@ -22,6 +22,14 @@ dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/relea
 
 曾通过手动配置或本地链接安装本插件的用户，应先检查旧配置，避免重复注册。本项目尚未发布到 npm，请勿直接执行 `npm install dsh-ssh-workspaces`。
 
+## 从旧的源码链接或手动注册迁移
+
+1. 等待主后端任务结束，再停止主后端。
+2. 保留主机配置文件，备份当前 profile 的 `package.json`、锁文件和 `cordis.patch.yml`。
+3. 执行上面的安装命令，将同名依赖替换为 Release 安装包。
+4. 官方安装流程会把 `dsh-ssh-workspaces` 登记到 `package.json` 的 `dsh.profile.bundles`。若它已存在，移除 `cordis.patch.yml` 中旧的、仅包含 `id: ssh-workspaces` / `name: dsh-ssh-workspaces` 的手动 insert 条目，避免重复注册；不要移除其他插件的配置。
+5. 重启主后端并刷新客户端，确认插件只加载一次。升级后手动成功连接一次，之后才会记住自动恢复意愿。
+
 ## 使用
 
 1. 设置 → DSH 多端管理，手动添加主机或从 SSH config 选择导入。
@@ -29,7 +37,7 @@ dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/relea
 3. 连接后，原生侧栏显示 `[本机]` 和 `[主机名称]` 工作区。设置仍属于主后端。
 4. 在多端管理的已连接主机行点“添加工作区”。浏览远端目录，或输入其绝对路径，再点“添加到侧栏”。这是登记已有目录，不是创建新文件夹。原生侧栏的原有“添加工作区”按钮仍用于主后端。
 5. 在对应工作区中创建、打开会话。运行地点由工作区所属后端决定。
-6. 断线会有限次重试；也可以手动重连。失败消息不会自动重发。主后端重启后需要重新连接保存的主机。
+6. 断线会有限次重试；也可以手动重连。失败消息不会自动重发。通过 SSH 自动读取登录信息并成功连接过的主机会在主后端重启后恢复；手动断开会取消恢复。手动登录链接不保存，重启后需重新提供。
 
 主机配置位于 `$DSH_HOME/plugins/dsh-ssh-workspaces/hosts.json`；未设置 DSH_HOME 时使用 `~/.dsh`。不要把它加入公开仓库。登录链接、cookie 保留在进程内存，不写入主机配置。
 

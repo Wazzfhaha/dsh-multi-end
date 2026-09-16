@@ -121,3 +121,17 @@ test('workspace feed emits one opening baseline, then native increments preservi
   assert.deepEqual(orders.at(-1).workspaceIds, ['b', 'a', gateway.id('host-b', 'workspace', 'b'), gateway.id('host-b', 'workspace', 'a')])
   assert.deepEqual(frames.filter(frame => frame.type === 'archived').at(-1).archivedSessionIds, ['same', gateway.id('host-b', 'session', 'same')])
 })
+
+
+test('remote notifications qualify identities while keeping event payloads opaque', () => {
+  const gateway = new NativeGateway({}, [])
+  const id = gateway.id('host', 'session', 'same')
+  assert.deepEqual(gateway.event('host', { type: 'emit', event: 'api-session/status', args: ['same', true] }), { event: 'api-session/status', args: [id, true] })
+  assert.deepEqual(gateway.event('host', { type: 'emit', event: 'api-session/status', args: ['same', false] }).args, [id, false])
+  const summary = { sessionId: 'same', parentSessionId: 'parent', projections: { values: { title: 'same' } } }
+  const added = gateway.event('host', { type: 'emit', event: 'api-session/added', args: [summary] })
+  assert.equal(added.args[0].sessionId, id)
+  assert.equal(added.args[0].projections, summary.projections)
+  assert.equal(gateway.event('host', { type: 'emit', event: 'settings/change', args: ['same'] }), null)
+  assert.throws(() => gateway.event('host', { type: 'emit', event: 'api-session/status', args: ['same', 'yes'] }))
+})

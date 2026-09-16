@@ -63,3 +63,18 @@ test('native polling during connect does not disconnect the new connection', asy
   model.dispose()
   assert.equal(disconnected, 0)
 })
+
+
+test('backend-restored connections refresh native feeds even when the client had none', async () => {
+  let connections = [], connected = 0
+  const target = { id: 'one', name: 'One' }
+  const model = module.createClientModel(async () => ({ targets: [target], connections }), { native: true, connected() { connected++ } })
+  await model.load()
+  connections = [{ host: 'one', connectionId: 'restored', sessions: [] }]
+  await model.load(); await model.load()
+  assert.equal(connected, 1)
+  connections = [{ host: 'one', connectionId: 'new-backend', sessions: [] }]
+  await model.load()
+  assert.equal(connected, 2)
+  model.dispose()
+})

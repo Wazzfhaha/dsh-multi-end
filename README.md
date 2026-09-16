@@ -1,17 +1,32 @@
-# DSH 多端管理
+# DSH 多端管理 · Remote SSH
 
-通过已有 SSH 配置，把其他机器上的 DSH 工作区和会话接入同一个原生 DSH 界面。对话在哪里，就在哪里运行；全局设置仍使用主后端。
+DSH 多端管理：通过 SSH 远程连接多台机器，在同一原生侧栏管理工作区与会话，任务在所属机器运行。支持手动添加主机或导入已有 SSH config；全局设置仍使用主后端。
 
-**0.0.6 开发预览。适配基线：DSH 0.1.5-rc.1。尚未完成跨平台实机验收与完整交互支持。**
+Remote SSH multi-host management for DSH. Access remote workspaces and sessions in one native sidebar, with tasks running on their original machines.
+
+**0.0.7 开发预览。适配基线：DSH 0.1.5-rc.1。尚未完成跨平台实机验收与完整交互支持。**
+
+## 界面预览
+
+以下为真实插件组件，使用虚构的演示主机与会话。
+
+![主机管理与连接状态](assets/screenshots/connections.png)
+
+<details>
+<summary>查看手动添加主机界面</summary>
+
+![手动添加 SSH 主机](assets/screenshots/add-host.png)
+
+</details>
 
 ## 安装与使用
 
-当前提供 [v0.0.6 安装包](https://github.com/Wazzfhaha/dsh-multi-end/releases/tag/v0.0.6)，验证基线为 DSH 0.1.5-rc.1。
+当前提供 [v0.0.7 安装包](https://github.com/Wazzfhaha/dsh-multi-end/releases/tag/v0.0.7)，验证基线为 DSH 0.1.5-rc.1。
 
 在运行主 DSH 后端的终端中执行：
 
 ```bash
-dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.6/dsh-ssh-workspaces-0.0.6.tgz
+dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.7/dsh-ssh-workspaces-0.0.7.tgz
 ```
 
 如使用其他 profile，请替换 `web`。安装后重启对应后端，打开“设置 → DSH 多端管理”，手动添加 SSH 主机或从 SSH config 导入。
@@ -19,6 +34,12 @@ dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/relea
 远端需运行 DSH，但不需要安装本插件。曾手动安装或使用本地链接安装本插件的用户，请先检查旧配置，避免重复注册。
 
 详见 [安装说明](docs/install.md) 和 [兼容性与限制](docs/compatibility.md)。
+
+## 0.0.7 修复
+
+- 主后端重启后，自动恢复此前成功连接的 SSH 主机；主动断开后不再自动连接。升级后需先成功连接一次，以记录恢复意愿。
+- 远端会话的运行、完成与活动通知实时进入原生侧栏，无需刷新页面。
+- 不保存带令牌的登录链接，不重发消息或任务。手动登录链接连接仍需重新提供凭证。
 
 ## 已实现
 

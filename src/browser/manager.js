@@ -19,7 +19,8 @@
             const data = await request('targets')
             const connections = navigation.native ? Object.fromEntries((data.connections ?? []).map(connection => [connection.host, { ...connection, target: data.targets.find(target => target.id === connection.host) }]).filter(([, connection]) => connection.target)) : state.connections
             if (!disposed && navigation.native) for (const [id, connection] of Object.entries(connections)) {
-              if (state.connections[id] && (connection.revision ?? 0) > (state.connections[id].revision ?? 0)) navigation.recovered?.(connection)
+              if ((!state.connections[id] || state.connections[id].connectionId !== connection.connectionId) && !state.busy[id]) navigation.connected?.(connection)
+              else if (state.connections[id] && (connection.revision ?? 0) > (state.connections[id].revision ?? 0)) navigation.recovered?.(connection)
             }
             if (!disposed) update({ targets: data.targets, connections, loading: false, error: '' })
           }

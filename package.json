@@ -1,7 +1,7 @@
 {
   "name": "dsh-ssh-workspaces",
-  "version": "0.0.6",
-  "description": "DSH 多端管理：通过已有 SSH 配置管理远端 DSH 工作区与会话（开发验证版）",
+  "version": "0.0.7",
+  "description": "DSH 多端管理 · Remote SSH：通过 SSH 在同一原生侧栏管理多台机器的工作区与会话。",
   "private": true,
   "type": "module",
   "main": "src/index.js",
@@ -19,8 +19,8 @@
   },
   "dsh": {
     "bundle": {
-    "patch": "./cordis.patch.yml"
-  },
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "inject": [
         "@deepseek-ai/dsh-client-runtime",
@@ -48,6 +48,20 @@
     "README.md",
     "LICENSE",
     "docs/compatibility.md",
-    "docs/install.md"
+    "docs/install.md",
+    "screenshots.json",
+    "assets/screenshots/*.png"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Wazzfhaha/dsh-multi-end.git"
+  },
+  "homepage": "https://github.com/Wazzfhaha/dsh-multi-end#readme",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "remote-ssh",
+    "multi-host",
+    "workspaces"
   ]
 }

@@ -5,7 +5,7 @@ import { targetArgs } from './ssh-target.js'
 import { dshPort } from './connection-options.js'
 
 function normalize(value) {
-  const keys = ['id', 'name', 'type', 'alias', 'hostname', 'user', 'sshPort', 'keyPath', 'dshPort']
+  const keys = ['id', 'name', 'type', 'alias', 'hostname', 'user', 'sshPort', 'keyPath', 'dshPort', 'autoConnect']
   if (!value || Object.keys(value).some(key => !keys.includes(key))) throw Error('Unsupported host field')
   if (typeof value.name !== 'string' || !value.name.trim() || value.name.length > 80 || /[\x00-\x1f]/.test(value.name)) throw Error('Invalid host name')
   targetArgs(value)
@@ -16,6 +16,10 @@ function normalize(value) {
     for (const key of ['hostname', 'user', 'sshPort']) if (value[key] !== undefined) result[key] = value[key]
   } else {
     Object.assign(result, { hostname: value.hostname, user: value.user, sshPort: value.sshPort ?? 22, keyPath: value.keyPath ?? '' })
+  }
+  if (value.autoConnect !== undefined) {
+    if (typeof value.autoConnect !== 'boolean') throw Error('Invalid reconnect preference')
+    result.autoConnect = value.autoConnect
   }
   return result
 }
@@ -58,6 +62,13 @@ export class TargetStore {
         items.push(target)
       } else items[index] = target
       return target
+    })
+  }
+  remember(id, enabled) {
+    return this.#mutate(items => {
+      const target = items.find(item => item.id === id)
+      if (!target) throw Error('Saved host not found')
+      target.autoConnect = enabled
     })
   }
   remove(id) {

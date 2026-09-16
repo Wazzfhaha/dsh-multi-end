@@ -70,7 +70,7 @@ export async function apply(ctx) {
             const target = await resolveTarget(input.id)
             return Response.json({ ...await checkTarget(target), destination: { hostname: target.hostname, user: target.user, sshPort: target.sshPort } })
           }
-          if (input.action === 'remove') return Response.json(await targets.remove(input.id))
+          if (input.action === 'remove') { nativeConnections.cancelRestore(input.id); return Response.json(await targets.remove(input.id)) }
           if (input.action !== 'save') throw Error('Unsupported host operation')
           let value = input.target
           if (value?.type === 'config') value = { ...value, ...await configuredHost(value.alias), name: value.name, id: value.id, dshPort: value.dshPort }
@@ -90,8 +90,9 @@ export async function apply(ctx) {
     client.displayName = target.name
     client.destination = { hostname: target.hostname, user: target.user, sshPort: target.sshPort }
     return client
-  }, native)
+  }, native, { remember: (host, enabled) => targets.remember(host, enabled), onEvent: frame => ctx.emit(frame.event, ...frame.args) })
   await registerConversations(ctx, nativeConnections)
+  nativeConnections.restore(await targets.list()).catch(() => {})
 }
 
 export async function registerConversations(ctx, connections) {
@@ -104,13 +105,13 @@ export async function registerConversations(ctx, connections) {
           const input = await request.json()
           if (action === 'connect') {
             const result = await connections.connect(input)
-            if (request.signal.aborted) { connections.disconnect(result.connectionId); throw new Error('Request cancelled') }
+            if (request.signal.aborted) { if (connections.disconnectSaved) await connections.disconnectSaved(result.connectionId); else connections.disconnect(result.connectionId); throw new Error('Request cancelled') }
             return Response.json(result, { headers: { 'cache-control': 'no-store' } })
           }
           if (action === 'command') return Response.json(await connections.command(input))
           if (action === 'workspace') return Response.json(await connections.workspace(input, request.signal), { headers: { 'cache-control': 'no-store' } })
           if (action === 'reconnect') return Response.json(await connections.reconnect(input.connectionId, input.loginUrl), { headers: { 'cache-control': 'no-store' } })
-          if (action === 'disconnect') { connections.disconnect(input.connectionId); return Response.json({ disconnected: true }) }
+          if (action === 'disconnect') { if (connections.disconnectSaved) await connections.disconnectSaved(input.connectionId); else connections.disconnect(input.connectionId); return Response.json({ disconnected: true }) }
           return new Response(connections.follow(input, request.signal), { headers: { 'content-type': 'application/x-ndjson', 'cache-control': 'no-store', 'x-accel-buffering': 'no' } })
         } catch {
           const error = action === 'workspace' ? '目录操作未完成，请核对远端路径和权限；浏览接口不可用时可手动输入路径。添加结果不明确时先检查侧栏。' : action === 'command' ? '操作未确认，请重新打开会话核对状态；不要直接重复发送。' : '连接未完成，请检查 SSH、登录链接及 DSH 协议兼容性；当前适配基线为 0.1.5-rc.1。'

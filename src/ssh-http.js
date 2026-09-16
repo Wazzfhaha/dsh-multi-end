@@ -93,6 +93,36 @@ export async function connectWithLogin(alias, loginUrl, socketFactory) {
   cookie = login.headers['set-cookie'].map(value => value.split(';')[0]).join('; ')
   return {
     close,
+    async subscribeEvents(accept, failed) {
+      const reader = follow('$events', { args: {} }, 'ready').getReader()
+      let ready
+      try {
+        const first = await reader.read()
+        if (first.done) throw Error('Remote events unavailable')
+        ready = JSON.parse(new TextDecoder().decode(first.value))
+        if (typeof ready.clientId !== 'string') throw Error('Invalid event generation')
+      } catch (error) { await reader.cancel(); reader.releaseLock(); throw error }
+      const task = (async () => {
+        try {
+          while (!closed) {
+            const { value, done } = await reader.read()
+            if (done) { if (!closed) throw Error('Remote events ended'); return }
+            const frame = JSON.parse(new TextDecoder().decode(value))
+            if (frame.type === 'emit') accept(frame)
+            else if (frame.type === 'waterfall') {
+              // This plugin observes notifications only. Delegate interactive requests
+              // back to the remote Host instead of leaving a delivery unanswered.
+              const result = await request(url, 'POST', '/api/$events/result', cookie, JSON.stringify({
+                type: 'client-request', rpcId: randomUUID(), method: '$events/result',
+                payload: { args: { clientId: ready.clientId, eventId: frame.eventId, outcome: { kind: 'next' } } }
+              }), createSocket)
+              if (result.status !== 200 || !JSON.parse(result.body).result?.ok) throw Error('Remote event delegation failed')
+            }
+          }
+        } finally { await reader.cancel(); reader.releaseLock() }
+      })()
+      task.catch(error => { if (!closed) failed(error) })
+    },
     native: {
       async invoke({ namespace, method, args, signal }) {
         const endpoint = `${namespace}/${method}`

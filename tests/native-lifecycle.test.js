@@ -87,3 +87,75 @@ test('an aborted reader does not initiate recovery', async () => {
   assert.equal(registry.list()[0].status, 'connected')
   registry.close()
 })
+
+
+test('restores only opted-in hosts and explicit disconnect survives a new backend', async () => {
+  const remembered = new Map([['one', true], ['two', false]])
+  const calls = []
+  const connect = async host => { calls.push(host); return { close() {}, native: { invoke: async () => ({ items: [] }) } } }
+  const options = { remember: async (host, enabled) => remembered.set(host, enabled), retryDelays: [] }
+  let registry = new NativeConnections(connect, new NativeGateway({}, []), options)
+  await registry.restore([...remembered].map(([id, autoConnect]) => ({ id, autoConnect })))
+  assert.deepEqual(calls, ['one'])
+  registry.close()
+  registry = new NativeConnections(connect, new NativeGateway({}, []), options)
+  await registry.restore([...remembered].map(([id, autoConnect]) => ({ id, autoConnect })))
+  assert.equal(registry.list().length, 1)
+  await registry.disconnectSaved(registry.list()[0].connectionId)
+  registry.close()
+  registry = new NativeConnections(connect, new NativeGateway({}, []), options)
+  await registry.restore([...remembered].map(([id, autoConnect]) => ({ id, autoConnect })))
+  assert.equal(registry.list().length, 0)
+  registry.close()
+})
+
+test('manual login URLs are never sent to reconnect persistence', async () => {
+  const remembered = []
+  const registry = new NativeConnections(async () => ({ close() {}, native: { invoke: async () => ({ items: [] }) } }), new NativeGateway({}, []), { remember: async (...args) => remembered.push(args) })
+  await registry.connect({ host: 'one', loginUrl: 'http://localhost/?token=private' })
+  assert.deepEqual(remembered, [['one', false]])
+  registry.close()
+})
+
+
+test('startup retries a temporarily unavailable host without touching other hosts', async () => {
+  let attempts = 0
+  const registry = new NativeConnections(async () => {
+    if (++attempts === 1) throw Error('Not ready')
+    return { close() {}, native: { invoke: async () => ({ items: [] }) } }
+  }, new NativeGateway({}, []), { retryDelays: [0] })
+  try {
+    await registry.restore([{ id: 'remote', autoConnect: true }])
+    for (let i = 0; i < 100 && !registry.list().length; i++) await delay(10)
+    assert.equal(registry.list().length, 1)
+    assert.equal(attempts, 2)
+  } finally { registry.close() }
+})
+
+test('cancelled startup cannot resurrect a removed host', async () => {
+  let release, closed = 0
+  const registry = new NativeConnections(() => new Promise(resolve => { release = resolve }), new NativeGateway({}, []))
+  const pending = registry.restore([{ id: 'remote', autoConnect: true }])
+  registry.cancelRestore('remote')
+  release({ close() { closed++ }, native: { invoke: async () => ({ items: [] }) } })
+  await pending
+  assert.equal(registry.list().length, 0)
+  assert.equal(closed, 1)
+  registry.close()
+})
+
+test('notifications from a replaced carrier cannot change session state', async () => {
+  const watchers = [], events = []
+  const registry = new NativeConnections(async () => ({ close() {},
+    subscribeEvents: async accept => { watchers.push(accept) },
+    native: { invoke: async () => ({ items: [{ sessionId: 's', running: false }] }) }
+  }), new NativeGateway({}, []), { onEvent: event => events.push(event) })
+  const connected = await registry.connect({ host: 'remote' })
+  await registry.reconnect(connected.connectionId)
+  const frame = { type: 'emit', event: 'api-session/status', args: ['s', true] }
+  watchers[0](frame)
+  assert.equal(events.length, 0)
+  watchers[1](frame)
+  assert.equal(events.length, 1)
+  registry.close()
+})

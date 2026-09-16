@@ -36,3 +36,19 @@ test('concurrent saves preserve both hosts and deletion never alters SSH config'
   await Promise.all(['one', 'two'].map(alias => store.save({ name: alias, type: 'config', alias, hostname: alias, user: 'dev', sshPort: 22, dshPort: 3080 })))
   assert.equal((await store.list()).length, 2)
 })
+
+
+test('reconnect preference survives a fresh store and explicit disconnect clears it', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'dsh-targets-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const file = join(dir, 'hosts.json')
+  const store = new TargetStore(file)
+  const target = await store.save({ name: 'Remote', type: 'config', alias: 'remote', hostname: 'remote', user: 'dev', sshPort: 22, dshPort: 3080 })
+  await store.remember(target.id, true)
+  const restored = new TargetStore(file)
+  assert.equal((await restored.get(target.id)).autoConnect, true)
+  await restored.remember(target.id, false)
+  assert.equal((await new TargetStore(file).get(target.id)).autoConnect, false)
+  await store.remove(target.id)
+  await assert.rejects(store.remember(target.id, true))
+})
