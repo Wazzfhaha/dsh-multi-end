@@ -1,6 +1,6 @@
 {
   "name": "dsh-ssh-workspaces",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "DSH 多端管理 · Remote SSH：通过 SSH 在同一原生侧栏管理多台机器的工作区与会话。",
   "private": true,
   "type": "module",

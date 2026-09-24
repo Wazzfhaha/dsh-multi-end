@@ -354,20 +354,6 @@ window.__ModuleLoader__.load({
         h('div', { className: 'dshm-actions' }, h('button', { className: 'dshm-primary', type: 'submit', disabled: busy || !path.trim() }, '添加到侧栏'), h('button', { type: 'button', disabled: busy, onClick: onClose }, '取消')))
     }
 
-    function QuickWorkspace({ model, onClose, onManage }) {
-      const state = useModel(model)
-      const connected = Object.values(state.connections).filter(value => value.status === 'connected')
-      const [selected, setSelected] = React.useState(null)
-      const connection = connected.find(value => value.connectionId === selected) ?? (connected.length === 1 ? connected[0] : null)
-      return h('section', { className: 'dshm dshm-manager', 'aria-label': '添加远端工作区' },
-        h('div', { className: 'dshm-section-head' }, h('h2', null, '添加远端工作区'), h('button', { onClick: onClose }, '返回会话')),
-        connection ? h(WorkspaceForm, { model, connection, onClose }) : connected.length ?
-          h('div', { className: 'dshm-editor' }, h('p', null, '选择工作区所属的后端'),
-            h('div', { className: 'dshm-actions' }, connected.map(value => h('button', { key: value.connectionId, onClick: () => setSelected(value.connectionId) }, value.target.name)))) :
-          h('div', { className: 'dshm-editor' }, h('p', { className: 'dshm-muted' }, '还没有已连接的远端后端。请先连接 SSH 主机。'),
-            h('div', { className: 'dshm-actions' }, h('button', { onClick: onManage }, '打开多端管理'))))
-    }
-
     function Panel({ model, close }) {
       const state = useModel(model)
       const [editor, setEditor] = React.useState(null), [query, setQuery] = React.useState(''), [error, setError] = React.useState('')
@@ -435,9 +421,7 @@ window.__ModuleLoader__.load({
         open(connection, session) { ctx.layout.selectPanel(null); ctx.sessions.open(session.sessionId) }
       })
       ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: managerPanel }, () => h('div', { className: 'dshm-main' }, h(Panel, { model }))))
-      ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'dsh-remote-add-workspace' }, () => h('div', { className: 'dshm-main' }, h(QuickWorkspace, { model, onClose: () => ctx.layout.selectPanel(null), onManage: () => ctx.layout.selectPanel(managerPanel) }))))
       ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({ name: 'sidebar.panellist', id: managerPanel, order: 55, label: () => '多端管理' }, HostIcon))
-      ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({ name: 'sidebar.panellist', id: 'dsh-remote-add-workspace', order: 56, label: () => '添加远端工作区' }, HostIcon))
       ctx.slots.inject('settings.section', () => ctx.slots.register({ name: 'settings.section', id: 'ssh-workspaces', order: 25, label: () => 'DSH 多端管理' }, ({ close }) => h(Panel, { model, close })))
       const poll = setInterval(async () => {
         if (polling) return

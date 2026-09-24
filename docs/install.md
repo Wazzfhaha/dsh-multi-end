@@ -13,12 +13,12 @@ SSH 在承载插件的 DSH 后端上执行，读取该用户的 SSH config、密
 在运行主 DSH 后端的终端中执行：
 
 ```bash
-dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.11/dsh-ssh-workspaces-0.0.11.tgz
+dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.12/dsh-ssh-workspaces-0.0.12.tgz
 ```
 
 如使用其他 profile，请将 `web` 替换为实际名称。安装后重启对应 DSH 后端。
 
-0.0.11 适配基线为 WSL/Linux DSH 0.1.7-rc.1。Windows/macOS 后端尚未完成实机验证。
+0.0.12 适配基线为 WSL/Linux DSH 0.1.7-rc.1。Windows/macOS 后端尚未完成实机验证。
 
 曾通过手动配置或本地链接安装本插件的用户，应先检查旧配置，避免重复注册。本项目尚未发布到 npm，请勿直接执行 `npm install dsh-ssh-workspaces`。
 
@@ -35,7 +35,7 @@ dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/relea
 1. 设置 → DSH 多端管理，手动添加主机或从 SSH config 选择导入。
 2. 点连接。自动读取登录信息仅适用于满足探测条件的 Linux；其他平台可以提供 DSH 启动时的 loopback HTTP 登录链接。
 3. 连接后，原生侧栏显示 `[本机]` 和 `[主机名称]` 工作区。设置仍属于主后端。
-4. 在多端管理的已连接主机行点“添加工作区”，或在左侧边栏点“添加远端工作区”。选择后端，浏览远端目录或输入其绝对路径，再点“添加到侧栏”。这是登记已有目录，不是创建新文件夹。原生侧栏的“+”按钮仍用于主后端。
+4. 在多端管理的已连接主机行点“添加工作区”，浏览远端目录或输入其绝对路径，再点“添加到侧栏”。这是登记已有目录，不是创建新文件夹。原生侧栏的“+”按钮仍用于主后端。
 5. 在对应工作区中创建、打开会话。运行地点由工作区所属后端决定。
 6. 断线会有限次重试；也可以手动重连。失败消息不会自动重发。通过 SSH 自动读取登录信息并成功连接过的主机会在主后端重启后恢复；手动断开会取消恢复。手动登录链接不保存，重启后需重新提供。
 
