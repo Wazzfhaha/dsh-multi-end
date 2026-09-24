@@ -67,10 +67,12 @@ export class NativeConnections {
     if (this.closed || this.connections.size + this.connecting.size >= 16) throw Error('Connection unavailable')
     if (this.connecting.has(host) || [...this.connections.values()].some(value => value.public.host === host)) throw Error('Host already connected')
     this.connecting.add(host)
-    let client, connectionId
+    let client, connectionId, stage = 'login'
     try {
       client = await this.connectHost(host, undefined, loginUrl)
+      stage = 'events'
       const activateEvents = await this.eventWatch(client, host)
+      stage = 'sessions'
       const raw = await client.native.invoke({ namespace: 'session', method: 'list', args: { _request: {} }, signal: AbortSignal.timeout(10000) })
       if (this.closed || (restoring && this.restoring.get(host) !== restoring) || [...this.connections.values()].some(value => value.public.host === host)) throw Error('Connection unavailable')
       connectionId = randomUUID()
@@ -102,7 +104,7 @@ export class NativeConnections {
             if (value.client === carrier) manager.failed(value, error, request.signal)
             if (!['workspace/follow', 'session/control'].includes(`${request.namespace}/${request.method}`)) throw error
           }
-          if (!opened && !request.signal?.aborted) yield { type: 'baseline', value: request.namespace === 'workspace' ? { items: [], archivedSessionIds: [], pinnedSessionIds: [] } : { queues: {}, jobs: {}, projections: {} } }
+          if (!opened && !request.signal?.aborted) yield { type: 'baseline', value: request.namespace === 'workspace' ? { items: [], archivedSessionIds: [], pinnedSessionIds: [] } : { projections: {} } }
         }
       }
       if (!restoring) await this.remember?.(host, !loginUrl)
@@ -111,7 +113,7 @@ export class NativeConnections {
       if (!restoring) this.cancelRestore(host)
       activateEvents(value)
       return value.public
-    } catch (error) { if (connectionId && this.connections.has(connectionId)) this.disconnect(connectionId); else client?.close(); throw error }
+    } catch (error) { if (error && typeof error === 'object' && !error.connectStage) error.connectStage = stage; if (connectionId && this.connections.has(connectionId)) this.disconnect(connectionId); else client?.close(); throw error }
     finally { this.connecting.delete(host) }
   }
   updateSessions(value, raw) {

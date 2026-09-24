@@ -30,3 +30,15 @@ test('a cancelled connect request releases its opaque handle instead of orphanin
   assert.equal(response.status, 400)
   assert.equal(released, 'private-handle')
 })
+
+test('connection failure reports only the safe stage, not the remote error', async () => {
+  const routes = new Map()
+  await registerConversations({ connection: { fetch: { register(route) { routes.set(route.path, route); return () => {} } } }, effect() {} }, {
+    async connect() { throw Object.assign(Error('private token and remote stack'), { connectStage: 'events' }) }, close() {}
+  })
+  const response = await routes.get('/api/ssh-workspaces/connect').fetch(new Request('http://localhost/api/ssh-workspaces/connect', { method: 'POST', body: '{}' }))
+  const body = await response.text()
+  assert.equal(response.status, 400)
+  assert.match(body, /事件流未建立/)
+  assert.doesNotMatch(body, /private token|remote stack/)
+})

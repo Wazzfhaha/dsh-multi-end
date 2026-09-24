@@ -190,16 +190,14 @@ export class NativeGateway {
         iterators.push(stream[Symbol.asyncIterator]())
         next(iterators.length - 1)
       }
-      const value = { queues: {}, jobs: {}, projections: {} }
+      const value = { projections: {} }
       for (const { index, result, error } of await Promise.all(pending.values())) {
         if (error) throw error
         if (result.done || result.value.type !== 'baseline') throw Error('Control stream has no opening baseline')
-        for (const field of ['queues', 'jobs', 'projections']) {
-          for (const [raw, item] of Object.entries(result.value.value[field])) {
-            const id = sources[index].id ? this.id(sources[index].id, 'session', raw) : raw
-            if (Object.hasOwn(value[field], id)) throw Error('Control identity collision')
-            value[field][id] = item
-          }
+        for (const [raw, item] of Object.entries(result.value.value.projections)) {
+          const id = sources[index].id ? this.id(sources[index].id, 'session', raw) : raw
+          if (Object.hasOwn(value.projections, id)) throw Error('Control identity collision')
+          value.projections[id] = item
         }
       }
       pending.clear()

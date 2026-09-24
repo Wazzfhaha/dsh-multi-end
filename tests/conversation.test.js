@@ -8,6 +8,21 @@ import { WebSocketServer } from 'ws'
 import { connectWithLogin } from '../src/ssh-http.js'
 import { ConversationConnections } from '../src/connections.js'
 
+test('0.1.7 browser login accepts the directory-relative redirect', async t => {
+  const server = http.createServer((req, res) => {
+    assert.equal(req.url, '/?token=test')
+    res.writeHead(303, { location: './', 'set-cookie': ['dsh=test; HttpOnly'] }); res.end()
+  })
+  server.listen(0, '127.0.0.1'); await once(server, 'listening')
+  t.after(() => server.close())
+  const port = server.address().port
+  const client = await connectWithLogin('mock', `http://127.0.0.1:${port}/?token=test`, () => {
+    const socket = net.connect(port, '127.0.0.1')
+    return Duplex.from({ readable: socket, writable: socket })
+  })
+  client.close()
+})
+
 test('authenticated SSH transport lists, follows, sends and stops using the DSH wire protocol', async t => {
   const calls = []
   const server = http.createServer(async (req, res) => {

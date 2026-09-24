@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { NativeGateway } from './native-gateway.js'
 import { NativeConnections } from './native-connections.js'
 import { checkNativeContract } from './native-contract.js'
+import { bridgeNativeWire } from './native-wire.js'
 
 export const name = 'ssh-workspaces'
 export const inject = ['connection', 'typertGateway']
@@ -16,6 +17,7 @@ export async function apply(ctx) {
   const native = new NativeGateway({ invoke: request => originalInvoke.call(gateway, request), stream: request => originalStream.call(gateway, request) }, [])
   let nativeConnections
   Object.defineProperty(native, 'hosts', { get: () => nativeConnections?.hosts() ?? [] })
+  ctx.effect(() => bridgeNativeWire(gateway, native), 'native Web carrier adapter')
   const invoke = request => native.invoke(request), stream = request => native.stream(request)
   gateway.invoke = invoke; gateway.stream = stream
   ctx.effect(() => () => {
@@ -84,9 +86,11 @@ export async function apply(ctx) {
   }
   nativeConnections = new NativeConnections(async (id, _port, loginUrl) => {
     const target = await resolveTarget(id)
-    const client = await connectTarget(target, loginUrl)
+    let client
+    try { client = await connectTarget(target, loginUrl) }
+    catch { throw Object.assign(Error('Remote DSH login failed'), { connectStage: 'login' }) }
     try { client.contract = await checkNativeContract(client.native) }
-    catch { client.close(); throw Error('远端工作区或会话协议检查失败，请核对 DSH 版本') }
+    catch (error) { client.close(); throw error }
     client.displayName = target.name
     client.destination = { hostname: target.hostname, user: target.user, sshPort: target.sshPort }
     return client
@@ -113,9 +117,15 @@ export async function registerConversations(ctx, connections) {
           if (action === 'reconnect') return Response.json(await connections.reconnect(input.connectionId, input.loginUrl), { headers: { 'cache-control': 'no-store' } })
           if (action === 'disconnect') { if (connections.disconnectSaved) await connections.disconnectSaved(input.connectionId); else connections.disconnect(input.connectionId); return Response.json({ disconnected: true }) }
           return new Response(connections.follow(input, request.signal), { headers: { 'content-type': 'application/x-ndjson', 'cache-control': 'no-store', 'x-accel-buffering': 'no' } })
-        } catch {
+        } catch (cause) {
+          const stage = cause?.connectStage
+          const detail = stage === 'login' ? 'SSH 已连通，但远端 DSH 登录未完成。' :
+            stage === 'events' ? '远端 DSH 事件流未建立。' :
+            stage === 'sessions' ? '远端 DSH 会话列表未返回。' :
+            stage?.startsWith('protocol-workspace-') ? '远端工作区基础协议检查未通过。' :
+            stage?.startsWith('protocol-session-') ? '远端会话控制基础协议检查未通过。' : ''
           const error = action === 'workspace' ? '目录操作未完成，请核对远端路径和权限；浏览接口不可用时可手动输入路径。添加结果不明确时先检查侧栏。' : action === 'command' ? '操作未确认，请重新打开会话核对状态；不要直接重复发送。' : '连接未完成，请检查 SSH、登录链接及 DSH 协议兼容性；当前适配基线为 0.1.7-rc.1。'
-          return Response.json({ error }, { status: 400, headers: { 'cache-control': 'no-store' } })
+          return Response.json({ error: detail && ['connect', 'reconnect'].includes(action) ? detail : error }, { status: 400, headers: { 'cache-control': 'no-store' } })
         }
       }
     })

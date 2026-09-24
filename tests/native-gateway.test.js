@@ -102,16 +102,16 @@ test('mixed-owner mutations and unsupported remote operations fail without local
   assert.equal(remote.calls.length, 1)
 })
 
-test('native control stream keeps remote queues and projections in their own scope', async () => {
+test('0.1.7 native control stream keeps remote projections in their own scope', async () => {
   const make = label => ({ async *stream() {
-    yield { type: 'baseline', value: { queues: { same: [] }, jobs: { same: [] }, projections: { same: { values: { title: label }, asOfSeq: 1 } } } }
+    yield { type: 'baseline', value: { projections: { same: { values: { title: label }, asOfSeq: 1 } } } }
     yield { type: 'projection', sessionId: 'same', key: 'title', value: label + ' updated', seq: 2 }
   } })
   const gateway = new NativeGateway(make('Local'), [{ id: 'host-b', transport: make('Remote') }])
   const frames = []
   for await (const frame of gateway.stream({ namespace: 'session', method: 'control', args: {} })) frames.push(frame)
   const baseline = frames[0].value, remoteId = gateway.id('host-b', 'session', 'same')
-  assert.deepEqual(Object.keys(baseline.queues).sort(), ['same', remoteId].sort())
+  assert.deepEqual(Object.keys(baseline.projections).sort(), ['same', remoteId].sort())
   assert.equal(baseline.projections[remoteId].values.title, 'Remote')
   assert(frames.some(frame => frame.type === 'projection' && frame.sessionId === remoteId && frame.value === 'Remote updated'))
 })

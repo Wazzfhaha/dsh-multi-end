@@ -89,7 +89,7 @@ export async function connectWithLogin(alias, loginUrl, socketFactory) {
   try { login = await request(url, 'GET', url.pathname + url.search, undefined, undefined, createSocket) }
   catch { close(); throw new Error('DSH login failed') }
   url.search = ''
-  if (![302, 303].includes(login.status) || login.headers.location !== '/' || !login.headers['set-cookie']?.length) { close(); throw new Error('DSH login rejected') }
+  if (![302, 303].includes(login.status) || !['/', './'].includes(login.headers.location) || !login.headers['set-cookie']?.length) { close(); throw new Error('DSH login rejected') }
   cookie = login.headers['set-cookie'].map(value => value.split(';')[0]).join('; ')
   return {
     close,
