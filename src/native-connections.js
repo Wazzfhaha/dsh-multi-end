@@ -120,13 +120,24 @@ export class NativeConnections {
     value.raw = raw
     value.public.sessions = projectSessions(raw.items).map(item => ({ ...item, sessionId: this.gateway.id(value.public.host, 'session', item.sessionId) }))
   }
-  async workspace({ connectionId, action, path }, signal) {
+  async workspace({ connectionId, action, path, name }, signal) {
     const value = this.connections.get(connectionId)
     if (!value || value.status !== 'connected') throw Error('请先连接目标后端')
-    if (!['browse', 'create'].includes(action) || (path !== undefined && (typeof path !== 'string' || path.length > 8192 || path.includes('\0')))) throw Error('无效的目录请求')
+    if (!['browse', 'create', 'mkdir'].includes(action) || (path !== undefined && (typeof path !== 'string' || path.length > 8192 || path.includes('\0')))) throw Error('无效的目录请求')
     if (action === 'create' && !path?.trim()) throw Error('请输入目标后端上的目录路径')
-    const request = action === 'browse' ? { namespace: 'directoryPicker', method: 'list', args: { path } } : { namespace: 'workspace', method: 'create', args: { request: { path } } }
-    const result = await value.transport.invoke({ ...request, signal })
+    if (action === 'mkdir' && (!path?.trim() || typeof name !== 'string' || !name || name !== name.trim() || name === '.' || name === '..' || /[\\/\x00-\x1f]/.test(name) || name.length > 255)) throw Error('请输入单个有效文件夹名称')
+    const request = action === 'browse' ? { namespace: 'directoryPicker', method: 'list', args: { path } } : action === 'mkdir' ? { namespace: 'directoryPicker', method: 'createDirectory', args: { path, name } } : { namespace: 'workspace', method: 'create', args: { request: { path } } }
+    let result
+    if (action !== 'create' && value.client.directoryMode === 'ssh') result = await value.client.directory({ action, path, name }, signal)
+    else {
+      try { result = await value.transport.invoke({ ...request, signal }) }
+      catch (error) {
+        if (action === 'create' || !error.directoryUnavailable || !value.client.directory) throw error
+        value.client.directoryMode = 'ssh'
+        result = await value.client.directory({ action, path, name }, signal)
+      }
+    }
+    if (action === 'mkdir') return result
     if (action === 'browse') {
       if (typeof result?.path !== 'string' || !Array.isArray(result.entries) || !Array.isArray(result.crumbs) || [...result.entries, ...result.crumbs].some(entry => typeof entry?.path !== 'string' || typeof entry?.name !== 'string')) throw Error('Unsupported directory listing')
       return result

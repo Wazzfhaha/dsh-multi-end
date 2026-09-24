@@ -4,7 +4,7 @@ DSH 多端管理：通过 SSH 远程连接多台机器，在同一原生侧栏�
 
 Remote SSH multi-host management for DSH. Access remote workspaces and sessions in one native sidebar, with tasks running on their original machines.
 
-**0.0.12 开发预览。适配基线：DSH 0.1.7-rc.1。尚未完成跨平台实机验收与完整交互支持。**
+**0.0.13 开发预览。适配基线：DSH 0.1.7-rc.1。尚未完成跨平台实机验收与完整交互支持。**
 
 ## 界面预览
 
@@ -23,12 +23,12 @@ Remote SSH multi-host management for DSH. Access remote workspaces and sessions 
 
 ## 安装与使用
 
-待发布 [v0.0.12 安装包](https://github.com/Wazzfhaha/dsh-multi-end/releases/tag/v0.0.12)，适配基线为 DSH 0.1.7-rc.1。
+待发布 [v0.0.13 安装包](https://github.com/Wazzfhaha/dsh-multi-end/releases/tag/v0.0.13)，适配基线为 DSH 0.1.7-rc.1。
 
 在运行主 DSH 后端的终端中执行：
 
 ```bash
-dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.12/dsh-ssh-workspaces-0.0.12.tgz
+dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.13/dsh-ssh-workspaces-0.0.13.tgz
 ```
 
 如使用其他 profile，请替换 `web`。安装后重启对应后端，打开“设置 → DSH 多端管理”，手动添加 SSH 主机或从 SSH config 导入。
@@ -36,6 +36,11 @@ dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/relea
 远端需运行 DSH，但不需要安装本插件。曾手动安装或使用本地链接安装本插件的用户，请先检查旧配置，避免重复注册。
 
 详见 [安装说明](docs/install.md) 和 [兼容性与限制](docs/compatibility.md)。
+
+## 0.0.13 更新
+
+- 修复远端 DSH 使用系统目录弹窗时无法浏览目录的问题，自动通过现有 SSH 的 SFTP 子系统读取目录。
+- 多端管理支持新建远端文件夹，再添加到原生工作区侧栏；不修改 DSH 主体或远端启动配置。
 
 ## 0.0.12 更新
 
@@ -67,7 +72,7 @@ dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/relea
 
 - 手动添加主机、选择导入 SSH config；SSH 和 DSH 端口独立配置。
 - 聚合原生工作区侧栏，标注后端来源；使用原生会话界面。
-- 远端提供目录浏览接口时可浏览已有目录；也可手动输入绝对路径添加工作区，并在所属工作区创建会话。
+- 支持远端目录浏览和新建文件夹；目录接口不可用时回退到 SSH SFTP。也可手动输入绝对路径添加工作区。
 - 会话改名、归档、取消归档、置顶与同一工作区内排序；已归档会话从管理页快捷列表隐藏。
 - 显式路由对话、取消、历史、分叉、附件、消息队列及会话 skills 请求。
 - 断线有限次重试、手动重连；保留未发送草稿，不自动重发失败消息。
@@ -75,7 +80,7 @@ dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/relea
 
 ## 当前限制
 
-工具审批、用户提问和第三方交互卡片尚未转发；这些场景需要使用所属后端的界面。Agent Box 的目录浏览接口在本轮实机验证中不可用，可手动输入绝对路径。远端文件侧栏、跨机器移动、全局配置同步不在当前支持范围。Windows/macOS 远端尚未实机验证。详见 [兼容表](docs/compatibility.md)。
+工具审批、用户提问和第三方交互卡片尚未转发；这些场景需要使用所属后端的界面。远端目录接口处于系统弹窗模式时，自动通过现有 SSH 的 SFTP 子系统浏览和新建文件夹；要求该 SSH 用户启用 SFTP，且 SFTP 与 DSH 看到的绝对路径一致（不支持路径不同的 chroot）。远端文件侧栏、跨机器移动、全局配置同步不在当前支持范围。Windows/macOS 远端尚未实机验证。详见 [兼容表](docs/compatibility.md)。
 
 [安装与使用](docs/install.md) · [手动上传 GitHub](docs/github-publishing.md)
 

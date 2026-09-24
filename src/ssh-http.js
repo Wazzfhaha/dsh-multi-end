@@ -126,7 +126,7 @@ export async function connectWithLogin(alias, loginUrl, socketFactory) {
     native: {
       async invoke({ namespace, method, args, signal }) {
         const endpoint = `${namespace}/${method}`
-        if (closed || !(nativeOperations.has(endpoint) || ['directoryPicker/list', 'workspace/create'].includes(endpoint))) throw Error('Unsupported native operation')
+        if (closed || !(nativeOperations.has(endpoint) || ['directoryPicker/list', 'directoryPicker/createDirectory', 'workspace/create'].includes(endpoint))) throw Error('Unsupported native operation')
         signal?.throwIfAborted()
         const rpcId = randomUUID()
         const response = await request(url, 'POST', `/api/${endpoint}`, cookie,
@@ -134,7 +134,18 @@ export async function connectWithLogin(alias, loginUrl, socketFactory) {
         if (response.status !== 200) throw Error('Native DSH request rejected')
         const body = JSON.parse(response.body)
         if (body.type !== 'server-response' || body.rpcId !== rpcId) throw Error('Invalid native DSH response')
-        if (!body.result?.ok) throw Object.assign(Error('Remote conversation operation failed'), { remoteBusinessError: true })
+        if (!body.result?.ok) {
+          const messages = {
+            'directory-picker/unavailable': '远端 DSH 使用本机目录弹窗模式，未提供远程目录浏览。',
+            'directory-picker/unreadable': '远端目录不存在或当前 SSH 用户无权读取。',
+            'directory-picker/exists': '远端已存在同名文件夹。',
+            'directory-picker/create-failed': '远端无法创建文件夹，请检查目录权限。',
+            'gateway/bad-request': '远端 DSH 拒绝了目录请求参数。',
+            'gateway/not-found': '远端 DSH 未提供所需目录接口。',
+            'gateway/internal': '远端 DSH 目录服务内部错误。'
+          }
+          throw Object.assign(Error('Remote conversation operation failed'), { remoteBusinessError: true, directoryUnavailable: body.result?.error?.code === 'directory-picker/unavailable', directoryError: namespace === 'directoryPicker' ? messages[body.result?.error?.code] : undefined })
+        }
         return body.result.value
       },
       async *stream({ namespace, method, args, signal }) {

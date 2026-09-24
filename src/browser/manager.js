@@ -73,8 +73,8 @@
             notice(target.id, '连接已恢复，未重发消息')
           })
         },
-        async workspace(connection, action, path, signal) {
-          const result = await request('workspace', { connectionId: connection.connectionId, action, path }, signal)
+        async workspace(connection, action, path, signal, name) {
+          const result = await request('workspace', { connectionId: connection.connectionId, action, path, ...(name === undefined ? {} : { name }) }, signal)
           if (action === 'create') { navigation.recovered?.(connection); await model.load() }
           return result
         },

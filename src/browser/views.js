@@ -75,7 +75,8 @@
 
     function WorkspaceForm({ model, connection, onClose }) {
       const [path, setPath] = React.useState(''), [listing, setListing] = React.useState(null), [busy, setBusy] = React.useState(false), [error, setError] = React.useState('')
-      const active = React.useRef(null)
+        const active = React.useRef(null)
+        const [folderName, setFolderName] = React.useState('')
       React.useEffect(() => () => active.current?.abort(), [])
       async function browse(nextPath) {
         active.current?.abort()
@@ -87,20 +88,29 @@
         } catch (error) { if (!controller.signal.aborted) setError(error.message) }
         finally { if (!controller.signal.aborted) setBusy(false) }
       }
-      async function create(event) {
+        async function mkdir() {
+          const controller = new AbortController(); active.current = controller
+          setBusy(true); setError('')
+          try {
+            const createdPath = await model.workspace(connection, 'mkdir', listing.path, controller.signal, folderName)
+            if (!controller.signal.aborted) { setFolderName(''); await browse(createdPath) }
+          } catch (error) { if (!controller.signal.aborted) { setError(error.message); setBusy(false) } }
+        }
+        async function create(event) {
         event.preventDefault(); setBusy(true); setError('')
         try { await model.workspace(connection, 'create', path); onClose() }
         catch (error) { setError(error.message); setBusy(false) }
       }
       return h('form', { className: 'dshm-editor', 'aria-label': '添加远端工作区', onSubmit: create },
         h('h3', null, '添加工作区 · ' + connection.target.name),
-        h('p', { className: 'dshm-muted' }, '选择这台后端上的已有目录。添加后会显示在原生侧栏，任务在该后端运行。'),
+          h('p', { className: 'dshm-muted' }, '选择或新建这台后端上的目录。添加后会显示在原生侧栏，任务在该后端运行。'),
         h(Field, { label: '远端目录', value: path, required: true, disabled: busy, onChange: event => { setPath(event.target.value); setListing(null) }, placeholder: '输入远端绝对路径，或点击浏览' }),
         h('div', { className: 'dshm-actions' }, h('button', { type: 'button', disabled: busy, onClick: () => browse(path) }, '浏览目录'), h('button', { type: 'button', disabled: busy, onClick: () => browse(undefined) }, '主目录')),
         listing && h('div', { className: 'dshm-directory' },
           h('nav', { 'aria-label': '远端目录层级' }, listing.crumbs.map(crumb => h('button', { key: crumb.path, type: 'button', disabled: busy, onClick: () => browse(crumb.path) }, crumb.name))),
           h('ul', null, listing.entries.map(entry => h('li', { key: entry.path }, h('button', { type: 'button', disabled: busy, onClick: () => browse(entry.path) }, '▸ ' + entry.name)))),
-          !listing.entries.length && h('p', null, '没有子目录，可添加当前目录'),
+            !listing.entries.length && h('p', null, '没有子目录，可添加当前目录'),
+            h('div', { className: 'dshm-actions' }, h(Field, { label: '新文件夹名称', value: folderName, disabled: busy, onChange: event => setFolderName(event.target.value), placeholder: '在当前目录中新建' }), h('button', { type: 'button', disabled: busy || !folderName.trim(), onClick: mkdir }, '新建文件夹')),
           listing.truncated && h('p', { className: 'dshm-muted' }, '目录较多，后端只返回部分结果；也可以直接输入完整路径。')),
         busy && h('p', { role: 'status' }, '正在处理…'),
         error && h('p', { role: 'alert', className: 'dshm-error' }, error),

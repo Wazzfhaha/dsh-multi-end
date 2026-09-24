@@ -57,3 +57,23 @@ test('remote workspace creation and browsing use only the explicitly selected co
   await assert.rejects(registry.workspace({ connectionId: 'unknown', action: 'create', path: '/tmp' }))
   registry.close()
 })
+
+test('native-only remote picker falls back to SSH directory operations while workspace registration stays on DSH', async () => {
+  const calls = [], gateway = new NativeGateway({}, [])
+  const registry = new NativeConnections(async () => ({
+    native: { async invoke(r) {
+      calls.push(r.namespace + '/' + r.method)
+      if (r.namespace === 'session') return { items: [] }
+      if (r.namespace === 'directoryPicker') throw Object.assign(Error('native picker'), { remoteBusinessError: true, directoryUnavailable: true })
+      return { workspace: { workspaceId: 'w', title: 'new', sessionIds: [] } }
+    } },
+    async directory(r) { calls.push(r.action); return r.action === 'mkdir' ? '/tmp/new' : { path: '/tmp', entries: [], crumbs: [] } }, close() {}
+  }), gateway)
+  const { connectionId } = await registry.connect({ host: 'box' })
+  assert.equal((await registry.workspace({ connectionId, action: 'browse' })).path, '/tmp')
+  assert.equal(await registry.workspace({ connectionId, action: 'mkdir', path: '/tmp', name: 'new' }), '/tmp/new')
+  await registry.workspace({ connectionId, action: 'create', path: '/tmp/new' })
+  assert.deepEqual(calls, ['session/list', 'directoryPicker/list', 'browse', 'mkdir', 'workspace/create'])
+  await assert.rejects(registry.workspace({ connectionId, action: 'mkdir', path: '/tmp', name: '../bad' }))
+  registry.close()
+})

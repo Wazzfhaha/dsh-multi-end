@@ -6,6 +6,7 @@ import { NativeGateway } from './native-gateway.js'
 import { NativeConnections } from './native-connections.js'
 import { checkNativeContract } from './native-contract.js'
 import { bridgeNativeWire } from './native-wire.js'
+import { directoryOverSsh } from './ssh-directory.js'
 
 export const name = 'ssh-workspaces'
 export const inject = ['connection', 'typertGateway']
@@ -93,6 +94,7 @@ export async function apply(ctx) {
     catch (error) { client.close(); throw error }
     client.displayName = target.name
     client.destination = { hostname: target.hostname, user: target.user, sshPort: target.sshPort }
+    client.directory = (request, signal) => directoryOverSsh(target, request, signal)
     return client
   }, native, { remember: (host, enabled) => targets.remember(host, enabled), onEvent: frame => ctx.emit(frame.event, ...frame.args) })
   await registerConversations(ctx, nativeConnections)
@@ -125,7 +127,7 @@ export async function registerConversations(ctx, connections) {
             stage?.startsWith('protocol-workspace-') ? '远端工作区基础协议检查未通过。' :
             stage?.startsWith('protocol-session-') ? '远端会话控制基础协议检查未通过。' : ''
           const error = action === 'workspace' ? '目录操作未完成，请核对远端路径和权限；浏览接口不可用时可手动输入路径。添加结果不明确时先检查侧栏。' : action === 'command' ? '操作未确认，请重新打开会话核对状态；不要直接重复发送。' : '连接未完成，请检查 SSH、登录链接及 DSH 协议兼容性；当前适配基线为 0.1.7-rc.1。'
-          return Response.json({ error: detail && ['connect', 'reconnect'].includes(action) ? detail : error }, { status: 400, headers: { 'cache-control': 'no-store' } })
+          return Response.json({ error: action === 'workspace' && cause?.directoryError ? cause.directoryError : detail && ['connect', 'reconnect'].includes(action) ? detail : error }, { status: 400, headers: { 'cache-control': 'no-store' } })
         }
       }
     })
