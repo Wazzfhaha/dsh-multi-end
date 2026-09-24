@@ -354,6 +354,20 @@ window.__ModuleLoader__.load({
         h('div', { className: 'dshm-actions' }, h('button', { className: 'dshm-primary', type: 'submit', disabled: busy || !path.trim() }, '添加到侧栏'), h('button', { type: 'button', disabled: busy, onClick: onClose }, '取消')))
     }
 
+    function QuickWorkspace({ model, onClose, onManage }) {
+      const state = useModel(model)
+      const connected = Object.values(state.connections).filter(value => value.status === 'connected')
+      const [selected, setSelected] = React.useState(null)
+      const connection = connected.find(value => value.connectionId === selected) ?? (connected.length === 1 ? connected[0] : null)
+      return h('section', { className: 'dshm dshm-manager', 'aria-label': '添加远端工作区' },
+        h('div', { className: 'dshm-section-head' }, h('h2', null, '添加远端工作区'), h('button', { onClick: onClose }, '返回会话')),
+        connection ? h(WorkspaceForm, { model, connection, onClose }) : connected.length ?
+          h('div', { className: 'dshm-editor' }, h('p', null, '选择工作区所属的后端'),
+            h('div', { className: 'dshm-actions' }, connected.map(value => h('button', { key: value.connectionId, onClick: () => setSelected(value.connectionId) }, value.target.name)))) :
+          h('div', { className: 'dshm-editor' }, h('p', { className: 'dshm-muted' }, '还没有已连接的远端后端。请先连接 SSH 主机。'),
+            h('div', { className: 'dshm-actions' }, h('button', { onClick: onManage }, '打开多端管理'))))
+    }
+
     function Panel({ model, close }) {
       const state = useModel(model)
       const [editor, setEditor] = React.useState(null), [query, setQuery] = React.useState(''), [error, setError] = React.useState('')
@@ -404,7 +418,7 @@ window.__ModuleLoader__.load({
         h('details', { className: 'dshm-help' }, h('summary', null, '连接与操作说明'),
           h('p', null, '“测试”检查 SSH；“连接”登录远端 DSH 并将会话加入侧栏。SSH 与 DSH 的端口可以分别设置。'),
           h('p', null, '连接由插件保持，关闭设置不会断开。断开连接不会停止远端任务。刷新页面保留连接；通过 SSH 自动读取登录信息并成功连接过的主机，会在主后端重启后自动恢复；手动断开会取消恢复。手动登录链接不保存，重启后需重新提供。连接变化通过 DSH 原生重连更新侧栏，不刷新整页。断线会自动尝试恢复，也可点击“重连”；不会自动重发消息。'),
-          h('p', null, '远端不需要安装此插件。工具审批、用户提问、第三方交互卡片和归档恢复尚未接入，请在所属后端的界面处理。全局设置仍属于主后端。')))
+          h('p', null, '远端不需要安装此插件。工具审批、用户提问和第三方交互卡片尚未接入，请在所属后端的界面处理。全局设置仍属于主后端。')))
     }
 
 
@@ -421,7 +435,9 @@ window.__ModuleLoader__.load({
         open(connection, session) { ctx.layout.selectPanel(null); ctx.sessions.open(session.sessionId) }
       })
       ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: managerPanel }, () => h('div', { className: 'dshm-main' }, h(Panel, { model }))))
+      ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'dsh-remote-add-workspace' }, () => h('div', { className: 'dshm-main' }, h(QuickWorkspace, { model, onClose: () => ctx.layout.selectPanel(null), onManage: () => ctx.layout.selectPanel(managerPanel) }))))
       ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({ name: 'sidebar.panellist', id: managerPanel, order: 55, label: () => '多端管理' }, HostIcon))
+      ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({ name: 'sidebar.panellist', id: 'dsh-remote-add-workspace', order: 56, label: () => '添加远端工作区' }, HostIcon))
       ctx.slots.inject('settings.section', () => ctx.slots.register({ name: 'settings.section', id: 'ssh-workspaces', order: 25, label: () => 'DSH 多端管理' }, ({ close }) => h(Panel, { model, close })))
       const poll = setInterval(async () => {
         if (polling) return

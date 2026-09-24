@@ -114,7 +114,7 @@ export async function registerConversations(ctx, connections) {
           if (action === 'disconnect') { if (connections.disconnectSaved) await connections.disconnectSaved(input.connectionId); else connections.disconnect(input.connectionId); return Response.json({ disconnected: true }) }
           return new Response(connections.follow(input, request.signal), { headers: { 'content-type': 'application/x-ndjson', 'cache-control': 'no-store', 'x-accel-buffering': 'no' } })
         } catch {
-          const error = action === 'workspace' ? '目录操作未完成，请核对远端路径和权限；浏览接口不可用时可手动输入路径。添加结果不明确时先检查侧栏。' : action === 'command' ? '操作未确认，请重新打开会话核对状态；不要直接重复发送。' : '连接未完成，请检查 SSH、登录链接及 DSH 协议兼容性；当前适配基线为 0.1.5-rc.1。'
+          const error = action === 'workspace' ? '目录操作未完成，请核对远端路径和权限；浏览接口不可用时可手动输入路径。添加结果不明确时先检查侧栏。' : action === 'command' ? '操作未确认，请重新打开会话核对状态；不要直接重复发送。' : '连接未完成，请检查 SSH、登录链接及 DSH 协议兼容性；当前适配基线为 0.1.7-rc.1。'
           return Response.json({ error }, { status: 400, headers: { 'cache-control': 'no-store' } })
         }
       }

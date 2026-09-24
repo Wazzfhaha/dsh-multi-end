@@ -38,8 +38,8 @@ test('unsupported remote file scope never falls through to the primary backend',
 
 test('contract check closes both probe streams and rejects malformed baseline', async () => {
   let closed = 0
-  const transport = { async *stream({ namespace }) { try { yield { type: 'baseline', value: namespace === 'workspace' ? { items: [], archivedSessionIds: [] } : { queues: {}, jobs: {}, projections: {} } } } finally { closed++ } } }
-  assert.match((await checkNativeContract(transport)).label, /版本未核验/)
+  const transport = { async *stream({ namespace }) { try { yield { type: 'baseline', value: namespace === 'workspace' ? { items: [], archivedSessionIds: [], pinnedSessionIds: [] } : { queues: {}, jobs: {}, projections: {} } } } finally { closed++ } } }
+  assert.match((await checkNativeContract(transport)).label, /0\.1\.7-rc\.1/)
   assert.equal(closed, 2)
   await assert.rejects(checkNativeContract({ async *stream() { yield { type: 'changed-contract' } } }))
 })

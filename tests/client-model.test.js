@@ -78,3 +78,23 @@ test('backend-restored connections refresh native feeds even when the client had
   assert.equal(connected, 2)
   model.dispose()
 })
+
+test('adding an Agent Box workspace refreshes the native sidebar without touching the local backend', async () => {
+  const target = { id: 'box', name: 'Agent Box' }
+  const connection = { host: 'box', connectionId: 'remote-connection', status: 'connected', sessions: [] }
+  const calls = [], refreshed = []
+  const model = module.createClientModel(async (action, input) => {
+    calls.push({ action, input })
+    if (action === 'targets') return { targets: [target], connections: [connection] }
+    if (action === 'workspace') return { workspace: { workspaceId: 'remote-workspace', path: '/home/test/project', title: '[Agent Box] project', sessionIds: [] } }
+  }, { native: true, recovered: value => refreshed.push(value.connectionId) })
+  await model.load()
+  await model.workspace({ ...connection, target }, 'create', '/home/test/project')
+  const workspaceCalls = calls.filter(call => call.action === 'workspace')
+  assert.equal(workspaceCalls.length, 1)
+  assert.equal(workspaceCalls[0].input.connectionId, 'remote-connection')
+  assert.equal(workspaceCalls[0].input.action, 'create')
+  assert.equal(workspaceCalls[0].input.path, '/home/test/project')
+  assert.deepEqual(refreshed, ['remote-connection'])
+  model.dispose()
+})

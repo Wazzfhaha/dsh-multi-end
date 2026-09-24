@@ -11,7 +11,9 @@
         open(connection, session) { ctx.layout.selectPanel(null); ctx.sessions.open(session.sessionId) }
       })
       ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: managerPanel }, () => h('div', { className: 'dshm-main' }, h(Panel, { model }))))
+      ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'dsh-remote-add-workspace' }, () => h('div', { className: 'dshm-main' }, h(QuickWorkspace, { model, onClose: () => ctx.layout.selectPanel(null), onManage: () => ctx.layout.selectPanel(managerPanel) }))))
       ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({ name: 'sidebar.panellist', id: managerPanel, order: 55, label: () => '多端管理' }, HostIcon))
+      ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({ name: 'sidebar.panellist', id: 'dsh-remote-add-workspace', order: 56, label: () => '添加远端工作区' }, HostIcon))
       ctx.slots.inject('settings.section', () => ctx.slots.register({ name: 'settings.section', id: 'ssh-workspaces', order: 25, label: () => 'DSH 多端管理' }, ({ close }) => h(Panel, { model, close })))
       const poll = setInterval(async () => {
         if (polling) return

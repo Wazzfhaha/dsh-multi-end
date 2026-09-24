@@ -102,7 +102,7 @@ export class NativeConnections {
             if (value.client === carrier) manager.failed(value, error, request.signal)
             if (!['workspace/follow', 'session/control'].includes(`${request.namespace}/${request.method}`)) throw error
           }
-          if (!opened && !request.signal?.aborted) yield { type: 'baseline', value: request.namespace === 'workspace' ? { items: [], archivedSessionIds: [] } : { queues: {}, jobs: {}, projections: {} } }
+          if (!opened && !request.signal?.aborted) yield { type: 'baseline', value: request.namespace === 'workspace' ? { items: [], archivedSessionIds: [], pinnedSessionIds: [] } : { queues: {}, jobs: {}, projections: {} } }
         }
       }
       if (!restoring) await this.remember?.(host, !loginUrl)

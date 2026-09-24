@@ -4,7 +4,7 @@ DSH 多端管理：通过 SSH 远程连接多台机器，在同一原生侧栏�
 
 Remote SSH multi-host management for DSH. Access remote workspaces and sessions in one native sidebar, with tasks running on their original machines.
 
-**0.0.7 开发预览。适配基线：DSH 0.1.5-rc.1。尚未完成跨平台实机验收与完整交互支持。**
+**0.0.8 开发预览。适配基线：DSH 0.1.7-rc.1。尚未完成跨平台实机验收与完整交互支持。**
 
 ## 界面预览
 
@@ -23,12 +23,12 @@ Remote SSH multi-host management for DSH. Access remote workspaces and sessions 
 
 ## 安装与使用
 
-当前提供 [v0.0.7 安装包](https://github.com/Wazzfhaha/dsh-multi-end/releases/tag/v0.0.7)，验证基线为 DSH 0.1.5-rc.1。
+待发布 [v0.0.8 安装包](https://github.com/Wazzfhaha/dsh-multi-end/releases/tag/v0.0.8)，适配基线为 DSH 0.1.7-rc.1。
 
 在运行主 DSH 后端的终端中执行：
 
 ```bash
-dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.7/dsh-ssh-workspaces-0.0.7.tgz
+dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.8/dsh-ssh-workspaces-0.0.8.tgz
 ```
 
 如使用其他 profile，请替换 `web`。安装后重启对应后端，打开“设置 → DSH 多端管理”，手动添加 SSH 主机或从 SSH config 导入。
@@ -36,6 +36,12 @@ dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/relea
 远端需运行 DSH，但不需要安装本插件。曾手动安装或使用本地链接安装本插件的用户，请先检查旧配置，避免重复注册。
 
 详见 [安装说明](docs/install.md) 和 [兼容性与限制](docs/compatibility.md)。
+
+## 0.0.8 更新
+
+- 兼容 DSH 0.1.7-rc.1 的工作区置顶状态和原生侧栏会话搜索；远端搜索结果与本机会话一起显示。
+- 侧栏新增“添加远端工作区”快捷入口，先选择已连接的后端，再浏览或填写其目录。原生“+”仍用于主后端。
+- 远端会话支持新版原生置顶、取消置顶和取消归档操作。
 
 ## 0.0.7 修复
 
@@ -48,14 +54,14 @@ dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/relea
 - 手动添加主机、选择导入 SSH config；SSH 和 DSH 端口独立配置。
 - 聚合原生工作区侧栏，标注后端来源；使用原生会话界面。
 - 浏览远端已有目录、添加工作区、在所属工作区创建会话。
-- 会话改名、归档与同一工作区内排序；已归档会话从管理页快捷列表隐藏。
+- 会话改名、归档、取消归档、置顶与同一工作区内排序；已归档会话从管理页快捷列表隐藏。
 - 显式路由对话、取消、历史、分叉、附件、消息队列及会话 skills 请求。
 - 断线有限次重试、手动重连；保留未发送草稿，不自动重发失败消息。
 - 连接时只读检查工作区与会话控制基础协议；这不代表已识别远端版本或验证全部操作。
 
 ## 当前限制
 
-工具审批、用户提问和第三方交互卡片尚未转发；这些场景需要使用所属后端的界面。归档恢复没有接入。远端文件侧栏、跨机器移动、全局配置同步不在当前支持范围。Windows/macOS 远端尚未实机验证。详见 [兼容表](docs/compatibility.md)。
+工具审批、用户提问和第三方交互卡片尚未转发；这些场景需要使用所属后端的界面。远端文件侧栏、跨机器移动、全局配置同步不在当前支持范围。Windows/macOS 远端尚未实机验证。详见 [兼容表](docs/compatibility.md)。
 
 [安装与使用](docs/install.md) · [手动上传 GitHub](docs/github-publishing.md)
 

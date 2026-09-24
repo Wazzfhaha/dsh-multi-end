@@ -25,7 +25,7 @@ test('unavailable remote aggregate stream falls back to an empty baseline withou
   await registry.connect({ host: 'host-a' })
   const frames = []
   for await (const frame of registry.hosts()[0].transport.stream({ namespace: 'workspace', method: 'follow' })) frames.push(frame)
-  assert.deepEqual(frames, [{ type: 'baseline', value: { items: [], archivedSessionIds: [] } }])
+  assert.deepEqual(frames, [{ type: 'baseline', value: { items: [], archivedSessionIds: [], pinnedSessionIds: [] } }])
   assert(registry.list()[0].error)
   registry.close()
 })

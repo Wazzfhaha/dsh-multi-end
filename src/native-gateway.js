@@ -67,7 +67,8 @@ export class NativeGateway {
         if (done || value.type !== 'baseline') throw Error('Workspace baseline unavailable')
         this.workspaceStates.set(source.id, {
           items: value.value.items.map(item => this.workspace(source.id, item)),
-          archivedSessionIds: value.value.archivedSessionIds.map(id => source.id ? this.id(source.id, 'session', id) : id)
+          archivedSessionIds: value.value.archivedSessionIds.map(id => source.id ? this.id(source.id, 'session', id) : id),
+          pinnedSessionIds: value.value.pinnedSessionIds.map(id => source.id ? this.id(source.id, 'session', id) : id)
         })
       } finally { lifetime.abort(); await iterator.return?.() }
     }
@@ -114,8 +115,17 @@ export class NativeGateway {
       if (local.items.some(item => this.owners.has(item.sessionId))) throw Error('Native identity collides with primary session')
       return { ...local, items: [...local.items, ...remote.flat()] }
     }
+    if (request.namespace === 'session' && request.method === 'search') {
+      const local = await this.primary.invoke(request)
+      const hosts = this.hosts
+      const remote = await Promise.allSettled(hosts.map(host => host.transport.invoke(request)))
+      request.signal?.throwIfAborted()
+      const available = remote.flatMap((result, index) => result.status === 'fulfilled' ?
+        [{ ...result.value, items: result.value.items.map(item => this.fields(hosts[index].id, item)) }] : [])
+      return { ...local, items: [...local.items, ...available.flatMap(value => value.items)], hasMore: local.hasMore || available.some(value => value.hasMore) }
+    }
     let { transport, request: routed, hostId } = this.route(request)
-    const aggregate = request.namespace === 'workspace' && ['archiveSession', 'insertBefore'].includes(request.method)
+    const aggregate = request.namespace === 'workspace' && ['archiveSession', 'unarchiveSession', 'pinSession', 'unpinSession', 'insertBefore'].includes(request.method)
     if (aggregate) await this.ensureWorkspaceStates(request.signal)
     if (request.namespace === 'workspace' && request.method === 'rename') {
       const input = routed.args.request, prefix = this.prefix(hostId)
@@ -125,9 +135,13 @@ export class NativeGateway {
     if (aggregate) {
       const state = this.workspaceStates.get(hostId ?? null)
       const sources = [null, ...this.hosts.map(host => host.id)]
-      if (request.method === 'archiveSession') {
+      if (['archiveSession', 'unarchiveSession'].includes(request.method)) {
         state.archivedSessionIds = value.archivedSessionIds.map(id => hostId ? this.id(hostId, 'session', id) : id)
         return { ...value, archivedSessionIds: sources.flatMap(id => this.workspaceStates.get(id)?.archivedSessionIds ?? []) }
+      }
+      if (['pinSession', 'unpinSession'].includes(request.method)) {
+        state.pinnedSessionIds = value.pinnedSessionIds.map(id => hostId ? this.id(hostId, 'session', id) : id)
+        return { ...value, pinnedSessionIds: sources.flatMap(id => this.workspaceStates.get(id)?.pinnedSessionIds ?? []) }
       }
       const byId = new Map(state.items.map(item => [item.workspaceId, item]))
       state.items = value.workspaceIds.map(id => byId.get(hostId ? this.id(hostId, 'workspace', id) : id))
@@ -238,7 +252,8 @@ export class NativeGateway {
         if (frame.type === 'baseline' && state) throw Error('Workspace stream repeated its opening baseline')
         if (frame.type === 'baseline') states.set(index, {
           items: frame.value.items.map(workspace),
-          archivedSessionIds: frame.value.archivedSessionIds.map(raw => id('session', raw))
+          archivedSessionIds: frame.value.archivedSessionIds.map(raw => id('session', raw)),
+          pinnedSessionIds: frame.value.pinnedSessionIds.map(raw => id('session', raw))
         })
         else if (!state) throw Error('Workspace stream has no opening baseline')
         else if (frame.type === 'upsert') {
@@ -251,16 +266,19 @@ export class NativeGateway {
           state.items = frame.workspaceIds.map(raw => byId.get(id('workspace', raw)))
           if (state.items.some(x => !x)) throw Error('Workspace order references unknown identity')
         } else if (frame.type === 'archived') state.archivedSessionIds = frame.archivedSessionIds.map(raw => id('session', raw))
+        else if (frame.type === 'pinned') state.pinnedSessionIds = frame.pinnedSessionIds.map(raw => id('session', raw))
         else throw Error('Unsupported workspace frame')
         this.workspaceStates.set(host, states.get(index))
         if (states.size === sources.length) {
           const items = sources.flatMap((_, i) => states.get(i).items)
           const archivedSessionIds = sources.flatMap((_, i) => states.get(i).archivedSessionIds)
+          const pinnedSessionIds = sources.flatMap((_, i) => states.get(i).pinnedSessionIds)
           if (!baselineSent) {
             baselineSent = true
-            yield { type: 'baseline', value: { items, archivedSessionIds } }
+            yield { type: 'baseline', value: { items, archivedSessionIds, pinnedSessionIds } }
           } else if (frame.type === 'order') yield { type: 'order', workspaceIds: items.map(item => item.workspaceId) }
           else if (frame.type === 'archived') yield { type: 'archived', archivedSessionIds }
+          else if (frame.type === 'pinned') yield { type: 'pinned', pinnedSessionIds }
           else if (frame.type === 'upsert') yield { ...frame, workspace: workspace(frame.workspace) }
           else if (frame.type === 'remove') yield { ...frame, workspaceId: id('workspace', frame.workspaceId) }
         }
