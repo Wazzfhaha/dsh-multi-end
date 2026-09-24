@@ -23,7 +23,7 @@ Remote SSH multi-host management for DSH. Access remote workspaces and sessions 
 
 ## 安装与使用
 
-待发布 [v0.0.13 安装包](https://github.com/Wazzfhaha/dsh-multi-end/releases/tag/v0.0.13)，适配基线为 DSH 0.1.7-rc.1。
+当前提供 [v0.0.13 安装包](https://github.com/Wazzfhaha/dsh-multi-end/releases/tag/v0.0.13)，适配基线为 DSH 0.1.7-rc.1。
 
 在运行主 DSH 后端的终端中执行：
 
@@ -39,6 +39,8 @@ dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/relea
 
 ## 0.0.13 更新
 
+- 适配 DSH 0.1.7-rc.1 的 Web Gateway、侧栏搜索与工作区接口。
+- 添加工作区时默认加载远端主目录，输入路径自动显示候选，点击或回车进入目录。
 - 修复远端 DSH 使用系统目录弹窗时无法浏览目录的问题，自动通过现有 SSH 的 SFTP 子系统读取目录。
 - 多端管理支持新建远端文件夹，再添加到原生工作区侧栏；不修改 DSH 主体或远端启动配置。
 
