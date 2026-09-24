@@ -73,48 +73,65 @@
         h('div', { className: 'dshm-actions' }, h('button', { className: 'dshm-primary', type: 'submit', disabled: busy }, busy ? '连接中…' : '连接并显示会话'), h('button', { type: 'button', disabled: busy, onClick: onClose }, '取消')))
     }
 
+    function directoryQuery(input) {
+      const value = /^[a-z]:[\\/]/i.test(input) ? input.replaceAll('\\', '/') : input
+      if (!/^(\/|[a-z]:\/)/i.test(value)) return null
+      const split = value.lastIndexOf('/')
+      return { path: value.slice(0, split + 1), prefix: value.slice(split + 1) }
+    }
+
     function WorkspaceForm({ model, connection, onClose }) {
       const [path, setPath] = React.useState(''), [listing, setListing] = React.useState(null), [busy, setBusy] = React.useState(false), [error, setError] = React.useState('')
         const active = React.useRef(null)
         const [folderName, setFolderName] = React.useState('')
-      React.useEffect(() => () => active.current?.abort(), [])
-      async function browse(nextPath) {
+      const timer = React.useRef(null)
+      const [prefix, setPrefix] = React.useState(''), [saving, setSaving] = React.useState(false)
+      React.useEffect(() => { browse(undefined); return () => { clearTimeout(timer.current); active.current?.abort() } }, [])
+      async function browse(nextPath, completion = null) {
+        clearTimeout(timer.current)
         active.current?.abort()
         const controller = new AbortController(); active.current = controller
         setBusy(true); setError(''); setListing(null)
         try {
           const value = await model.workspace(connection, 'browse', nextPath || undefined, controller.signal)
-          if (!controller.signal.aborted) { setListing(value); setPath(value.path) }
+          if (!controller.signal.aborted) { setListing(value); setPrefix(completion ?? ''); if (completion === null) setPath(value.path) }
         } catch (error) { if (!controller.signal.aborted) setError(error.message) }
         finally { if (!controller.signal.aborted) setBusy(false) }
       }
+      function editPath(value) {
+        clearTimeout(timer.current); active.current?.abort()
+        setPath(value); setListing(null); setError(''); setBusy(false)
+        const query = directoryQuery(value)
+        if (query) timer.current = setTimeout(() => browse(query.path, query.prefix), 300)
+      }
         async function mkdir() {
           const controller = new AbortController(); active.current = controller
-          setBusy(true); setError('')
+          setBusy(true); setSaving(true); setError('')
           try {
             const createdPath = await model.workspace(connection, 'mkdir', listing.path, controller.signal, folderName)
             if (!controller.signal.aborted) { setFolderName(''); await browse(createdPath) }
           } catch (error) { if (!controller.signal.aborted) { setError(error.message); setBusy(false) } }
+          finally { setSaving(false) }
         }
         async function create(event) {
-        event.preventDefault(); setBusy(true); setError('')
+        event.preventDefault(); clearTimeout(timer.current); active.current?.abort(); setBusy(true); setSaving(true); setError('')
         try { await model.workspace(connection, 'create', path); onClose() }
-        catch (error) { setError(error.message); setBusy(false) }
+        catch (error) { setError(error.message); setBusy(false); setSaving(false) }
       }
+      const entries = listing?.entries.filter(entry => entry.name.toLocaleLowerCase().startsWith(prefix.toLocaleLowerCase())) ?? []
       return h('form', { className: 'dshm-editor', 'aria-label': '添加远端工作区', onSubmit: create },
         h('h3', null, '添加工作区 · ' + connection.target.name),
           h('p', { className: 'dshm-muted' }, '选择或新建这台后端上的目录。添加后会显示在原生侧栏，任务在该后端运行。'),
-        h(Field, { label: '远端目录', value: path, required: true, disabled: busy, onChange: event => { setPath(event.target.value); setListing(null) }, placeholder: '输入远端绝对路径，或点击浏览' }),
-        h('div', { className: 'dshm-actions' }, h('button', { type: 'button', disabled: busy, onClick: () => browse(path) }, '浏览目录'), h('button', { type: 'button', disabled: busy, onClick: () => browse(undefined) }, '主目录')),
+        h('div', { className: 'dshm-pathbar' }, h(Field, { label: '远端目录', value: path, required: true, disabled: saving, onChange: event => editPath(event.target.value), onKeyDown: event => { if (event.key === 'Enter' && !event.nativeEvent?.isComposing) { event.preventDefault(); browse(path) } }, placeholder: '输入路径自动查找，例如 /srv/ 或 C:/Users/' }), h('button', { type: 'button', disabled: saving, onClick: () => browse(undefined) }, '主目录')),
         listing && h('div', { className: 'dshm-directory' },
           h('nav', { 'aria-label': '远端目录层级' }, listing.crumbs.map(crumb => h('button', { key: crumb.path, type: 'button', disabled: busy, onClick: () => browse(crumb.path) }, crumb.name))),
-          h('ul', null, listing.entries.map(entry => h('li', { key: entry.path }, h('button', { type: 'button', disabled: busy, onClick: () => browse(entry.path) }, '▸ ' + entry.name)))),
-            !listing.entries.length && h('p', null, '没有子目录，可添加当前目录'),
-            h('div', { className: 'dshm-actions' }, h(Field, { label: '新文件夹名称', value: folderName, disabled: busy, onChange: event => setFolderName(event.target.value), placeholder: '在当前目录中新建' }), h('button', { type: 'button', disabled: busy || !folderName.trim(), onClick: mkdir }, '新建文件夹')),
+          h('ul', { 'aria-label': '匹配的远端文件夹' }, entries.map(entry => h('li', { key: entry.path }, h('button', { type: 'button', disabled: busy, onClick: () => browse(entry.path) }, h('span', null, '▸ ' + entry.name), h('span', { 'aria-hidden': true }, '›'))))),
+            !entries.length && h('p', { className: 'dshm-muted' }, prefix ? '没有匹配的文件夹，可继续输入路径' : '没有子目录，可添加当前目录'),
+            !prefix && h('div', { className: 'dshm-new-folder' }, h(Field, { label: '新文件夹名称', value: folderName, disabled: busy, onChange: event => setFolderName(event.target.value), onKeyDown: event => { if (event.key === 'Enter') { event.preventDefault(); if (folderName.trim()) mkdir() } }, placeholder: '在当前目录中新建' }), h('button', { type: 'button', disabled: busy || !folderName.trim(), onClick: mkdir }, '新建文件夹')),
           listing.truncated && h('p', { className: 'dshm-muted' }, '目录较多，后端只返回部分结果；也可以直接输入完整路径。')),
         busy && h('p', { role: 'status' }, '正在处理…'),
         error && h('p', { role: 'alert', className: 'dshm-error' }, error),
-        h('p', { className: 'dshm-muted' }, '若该后端未提供目录浏览，可直接输入路径添加。不会在远端弹出系统窗口。'),
+        h('p', { className: 'dshm-muted' }, '输入路径自动显示候选目录，点击文件夹或按回车进入。添加后，任务在这台远端机器运行。'),
         h('div', { className: 'dshm-actions' }, h('button', { className: 'dshm-primary', type: 'submit', disabled: busy || !path.trim() }, '添加到侧栏'), h('button', { type: 'button', disabled: busy, onClick: onClose }, '取消')))
     }
 
