@@ -13,12 +13,12 @@ SSH 在承载插件的 DSH 后端上执行，读取该用户的 SSH config、密
 在运行主 DSH 后端的终端中执行：
 
 ```bash
-dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.13/dsh-ssh-workspaces-0.0.13.tgz
+dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.8/dsh-ssh-workspaces-0.0.8.tgz
 ```
 
 如使用其他 profile，请将 `web` 替换为实际名称。安装后重启对应 DSH 后端。
 
-0.0.13 适配基线为 WSL/Linux DSH 0.1.7-rc.1。Windows/macOS 后端尚未完成实机验证。
+0.0.8 适配基线为 WSL/Linux DSH 0.1.7-rc.1。Windows/macOS 后端尚未完成实机验证。
 
 曾通过手动配置或本地链接安装本插件的用户，应先检查旧配置，避免重复注册。本项目尚未发布到 npm，请勿直接执行 `npm install dsh-ssh-workspaces`。
 

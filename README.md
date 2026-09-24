@@ -4,7 +4,7 @@ DSH 多端管理：通过 SSH 远程连接多台机器，在同一原生侧栏�
 
 Remote SSH multi-host management for DSH. Access remote workspaces and sessions in one native sidebar, with tasks running on their original machines.
 
-**0.0.13 开发预览。适配基线：DSH 0.1.7-rc.1。尚未完成跨平台实机验收与完整交互支持。**
+**0.0.8 开发预览。适配基线：DSH 0.1.7-rc.1。尚未完成跨平台实机验收与完整交互支持。**
 
 ## 界面预览
 
@@ -23,12 +23,12 @@ Remote SSH multi-host management for DSH. Access remote workspaces and sessions 
 
 ## 安装与使用
 
-当前提供 [v0.0.13 安装包](https://github.com/Wazzfhaha/dsh-multi-end/releases/tag/v0.0.13)，适配基线为 DSH 0.1.7-rc.1。
+当前提供 [v0.0.8 安装包](https://github.com/Wazzfhaha/dsh-multi-end/releases/tag/v0.0.8)，适配基线为 DSH 0.1.7-rc.1。
 
 在运行主 DSH 后端的终端中执行：
 
 ```bash
-dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.13/dsh-ssh-workspaces-0.0.13.tgz
+dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/releases/download/v0.0.8/dsh-ssh-workspaces-0.0.8.tgz
 ```
 
 如使用其他 profile，请替换 `web`。安装后重启对应后端，打开“设置 → DSH 多端管理”，手动添加 SSH 主机或从 SSH config 导入。
@@ -37,7 +37,7 @@ dsh plugin --profile web add -w https://github.com/Wazzfhaha/dsh-multi-end/relea
 
 详见 [安装说明](docs/install.md) 和 [兼容性与限制](docs/compatibility.md)。
 
-## 0.0.13 更新
+## 0.0.8 更新
 
 - 适配 DSH 0.1.7-rc.1 的 Web Gateway、侧栏搜索与工作区接口。
 - 添加工作区时默认加载远端主目录，输入路径自动显示候选，点击或回车进入目录。
