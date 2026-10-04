@@ -1,4 +1,4 @@
-// DSH 0.1.7's Web carrier calls invokeRpc/openWireStream, not invoke/stream.
+// DSH 0.1.7 / 0.2.0 Web carrier calls invokeRpc/openWireStream, not invoke/stream.
 const aggregate = new Set([
   'session/list', 'session/search', 'workspace/archiveSession', 'workspace/unarchiveSession',
   'workspace/pinSession', 'workspace/unpinSession', 'workspace/insertBefore'
@@ -6,7 +6,7 @@ const aggregate = new Set([
 const streams = new Set(['workspace/follow', 'session/control', 'session/follow'])
 
 export function bridgeNativeWire(gateway, native) {
-  if (typeof gateway.invokeRpc !== 'function' || typeof gateway.openWireStream !== 'function') throw Error('Unsupported DSH 0.1.7 Web carrier')
+  if (typeof gateway.invokeRpc !== 'function' || typeof gateway.openWireStream !== 'function') throw Error('Unsupported DSH Web carrier')
   const originalRpc = gateway.invokeRpc, originalStream = gateway.openWireStream
   const failure = { ok: false, error: { code: 'gateway/internal', message: 'Remote conversation operation failed', details: {} } }
   const rpc = async (endpoint, payload, signal, peer) => {

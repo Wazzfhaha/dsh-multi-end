@@ -36,3 +36,17 @@ test('0.1.7 Web carrier receives remote list, search and workspace feed; dispose
   assert.equal(gateway.invokeRpc, originalRpc)
   assert.equal(gateway.openWireStream, originalStream)
 })
+
+test('0.2.0 Web projections resolve the remote owner without touching primary state', async () => {
+  const native = new NativeGateway({}, [{ id: 'remote', transport: { invoke: async r => {
+    assert.equal(r.method, 'projections')
+    assert.equal(r.args.request.sessionId, 'raw')
+    return null
+  } } }])
+  const gateway = { invokeRpc() { throw Error('Must not reach primary') }, openWireStream() {} }
+  const restore = bridgeNativeWire(gateway, native)
+  try {
+    const sessionId = native.id('remote', 'session', 'raw')
+    assert.deepEqual(await gateway.invokeRpc('session/projections', { args: { request: { sessionId } } }), { ok: true, value: null })
+  } finally { restore() }
+})

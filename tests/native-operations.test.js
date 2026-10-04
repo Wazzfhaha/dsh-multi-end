@@ -77,3 +77,15 @@ test('native-only remote picker falls back to SSH directory operations while wor
   await assert.rejects(registry.workspace({ connectionId, action: 'mkdir', path: '/tmp', name: '../bad' }))
   registry.close()
 })
+
+test('0.2.0 remote projections stay on their backend and preserve opaque values and missing sessions', async () => {
+  let response = { asOfSeq: 12, values: { title: 'Remote title', plugin: { sessionId: 'opaque' } }, seqs: { title: 12 } }
+  const calls = []
+  const gateway = new NativeGateway({ invoke() { throw Error('Must not reach primary') } }, [{ id: 'box', transport: { invoke(r) { calls.push(r); return response } } }])
+  const sessionId = gateway.id('box', 'session', 'raw')
+  const request = { namespace: 'session', method: 'projections', args: { request: { sessionId } } }
+  assert.deepEqual(await gateway.invoke(request), response)
+  assert.equal(calls[0].args.request.sessionId, 'raw')
+  response = null
+  assert.equal(await gateway.invoke(request), null)
+})

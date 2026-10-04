@@ -2,7 +2,7 @@
 
 ## 当前适配范围
 
-插件 0.0.8；DSH 适配基线 0.1.7-rc.1。会话控制流契约、登录重定向与 Web Gateway 分派路径已按 0.1.7 的真实行为修正。WSL 主后端连接 Agent Box 的原生侧栏、搜索、历史和工作区登记已实机验收。Windows、macOS 远端及多客户端并发实机验证暂缓，不能宣传“所有平台已验证”。
+插件 0.0.9；DSH 适配基线 0.1.7-rc.1 / 0.2.0-rc.1。会话控制流契约、登录重定向与 Web Gateway 分派路径已按 0.1.7 的真实行为修正。WSL 主后端连接 Agent Box 的原生侧栏、搜索、历史和工作区登记已实机验收。Windows、macOS 远端及多客户端并发实机验证暂缓，不能宣传“所有平台已验证”。
 
 | 功能 | 实现及验证范围 |
 | --- | --- |
@@ -21,6 +21,28 @@
 | 重连 | 有限重试、保留身份、原生重新订阅；不会自动重发变更请求 |
 | 主后端重启 | 自动读取登录信息连接过的主机自动恢复；手动登录链接不保存 |
 | 全局设置、插件与 skills 同步 | 不同步，主后端仍负责全局界面 |
+
+## 0.2.0-rc.1 隔离验证（2026-10-04）
+
+锁定上游标签 `dsh-v0.2.0-rc.1`（提交 `4878cdabd87d4041bdaff61d04c966883b9fd07a`），安装官方 `@deepseek-ai/dsh@0.2.0-rc.1`，使用独立 Node 24、两个专用 `DSH_HOME`、随机 loopback 端口。没有升级、重启或改写用户主力 DSH。
+
+- 修正新增的 `session/projections` 路由；远端会话状态只向所属后端请求，缺失会话的 `null` 保持原样。
+- 真实两后端验证：登录、事件订阅建立、工作区/control baseline、工作区登记、会话创建/改名、projections、历史 snapshot、搜索接口、归档/取消归档、置顶/取消置顶。
+- 浏览器验证：最终 0.0.9 安装包可以加载，多端管理的原生面板正常；两端工作区同时出现在原生侧栏，通过管理器输入路径可添加远端工作区，远端空会话可在原生界面打开。没有填写模型密钥。
+- 本轮真实协议测试使用直接 loopback socket 替代 SSH 字节隧道；OpenSSH/SFTP、断线恢复与实时状态变化另有自动化回归。没有实际连接 Agent Box，没有发送真实模型请求；不能把本轮验证宣传为完整 SSH、模型流式运行或全平台实机验收。
+- Windows 默认系统目录弹窗会返回 `directory-picker/unavailable`。插件保留 SFTP 回退和手动路径登记；本轮验证了手动登记，目录回退由现有模拟测试覆盖。
+- 官方 Web profile 的全文搜索默认 `openAt: never`。需要全文搜索时，由用户在相关后端的 profile `cordis.patch.yml` 配置官方能力，插件不会自动开启：
+
+```yaml
+- id: session-query-sqlite
+  config:
+    path: ':memory:'
+    openAt: first-search
+```
+
+原生全文搜索扫描消息内容，不搜索空会话的标题。测试 profile 单独启用了上述配置；真实搜索接口验证不等于带消息内容的搜索 UI 验收。
+
+可选集成测试（需先在专用目录启动两套一次性 DSH，日志分别为 `primary.stdout.log` 和 `remote.stdout.log`）：设置 `DSH_COMPAT_TEST_ROOT` 为该目录，运行 `node --test tests/dsh-runtime.test.js`。测试会创建工作区和空会话，只可指向测试环境。常规 `npm test` 不设置该变量时跳过此项。
 
 ## 跨平台审计（2026-09-24）
 
@@ -42,7 +64,7 @@
 
 ## 接入实现
 
-`src/index.js` 在插件生命周期内包装 `typertGateway.invoke/stream`；`native-wire.js` 对 DSH 0.1.7 Web Carrier 的 `invokeRpc/openWireStream` 作限定适配，卸载时恢复原方法。此入口不是上游公开的稳定扩展 API，升级 DSH 前必须重新核对并运行协议与浏览器回归。`native-gateway.js` 只翻译已知身份字段，不改写对话文本、路径和附件内容。`native-contract.js` 集中声明当前适配的操作。
+`src/index.js` 在插件生命周期内包装 `typertGateway.invoke/stream`；`native-wire.js` 对 DSH 0.1.7 / 0.2.0 Web Carrier 的 `invokeRpc/openWireStream` 作限定适配，卸载时恢复原方法。此入口不是上游公开的稳定扩展 API，升级 DSH 前必须重新核对并运行协议与浏览器回归。`native-gateway.js` 只翻译已知身份字段，不改写对话文本、路径和附件内容。`native-contract.js` 集中声明当前适配的操作。
 
 这是对公开服务方法的运行时适配，不是上游承诺稳定的多后端中间件接口。没有覆盖 DSH 安装文件，也没有第二套对话 renderer 接管原生会话；源码中保留的早期 renderer 仅用于历史测试，不是当前界面。
 

@@ -1,7 +1,7 @@
-// Explicit 0.1.7-rc.1 adapter surface. Never forward arbitrary plugin RPCs.
+// Explicit 0.1.7-rc.1 / 0.2.0-rc.1 adapter surface. Never forward arbitrary plugin RPCs.
 export const nativeOperations = new Set([
   'session/list', 'session/search', 'session/create', 'session/fork', 'session/prompt', 'session/cancel',
-  'session/rename', 'session/page', 'session/selectModel', 'session/attachment', 'session/updateQueue',
+  'session/rename', 'session/projections', 'session/page', 'session/selectModel', 'session/attachment', 'session/updateQueue',
   'skills/list', 'fileReferences/list', 'fileUploads/upload',
   'workspace/rename', 'workspace/delete', 'workspace/insertSessionBefore', 'workspace/archiveSession', 'workspace/unarchiveSession',
   'workspace/pinSession', 'workspace/unpinSession', 'workspace/insertBefore'
@@ -26,5 +26,5 @@ export async function checkNativeContract(transport, signal) {
     } catch { throw Object.assign(Error('Unsupported native baseline'), { connectStage: `protocol-${namespace}-${phase}` }) }
     finally { lifetime.abort(); await iterator?.return?.() }
   }))
-  return { workspace: results[0], label: '基础协议检查通过 · 适配基线 DSH 0.1.7-rc.1；远端版本未核验' }
+  return { workspace: results[0], label: '基础协议检查通过 · 适配基线 DSH 0.1.7-rc.1 / 0.2.0-rc.1；远端版本未核验' }
 }

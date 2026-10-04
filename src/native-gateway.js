@@ -150,7 +150,7 @@ export class NativeGateway {
     }
     if (request.namespace === 'workspace' && value.workspace) return { ...value, workspace: this.workspace(hostId, value.workspace) }
     if (!hostId) return value
-    if (request.namespace === 'session') return this.fields(hostId, value)
+    if (request.namespace === 'session') return value === null ? null : this.fields(hostId, value)
     if (value.workspace) return { ...value, workspace: this.workspace(hostId, value.workspace) }
     if (value.workspaceIds) throw Error('Workspace ordering aggregation is not implemented')
     if (value.archivedSessionIds) throw Error('Archive aggregation is not implemented')
